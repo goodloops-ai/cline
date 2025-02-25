@@ -87,7 +87,9 @@ jobs:
           node codemods/apply.js
       
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          npm install
+          npm ci
       - name: Commit Changes
         id: commit
         run: |
