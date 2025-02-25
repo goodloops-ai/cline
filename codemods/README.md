@@ -26,8 +26,8 @@ git checkout v1.x.x
 # Copy the codemods directory into the cloned repository (if not already present)
 # cp -r /path/to/your/codemods ./codemods
 
-# Install dependencies (fs-extra is required by the apply script)
-npm install fs-extra
+# Install dependencies (fs-extra and ts-morph are required by the apply script)
+npm install fs-extra ts-morph
 
 # Apply the codemods
 node codemods/apply.js
@@ -70,9 +70,29 @@ To add a new codemod:
 
 ## Release Process
 
+### Manual Process
+
 1. Clone the upstream repository
 2. Checkout the latest release tag
 3. Copy your `codemods` directory into the cloned repository (if not already present)
 4. Run `node codemods/apply.js` to apply all your modifications
 5. Build and test the modified codebase
 6. Create a new release tag for your fork
+
+### Automated Process
+
+This repository includes GitHub Actions workflows that automate the sync process with the upstream repository:
+
+1. **Upstream Release Webhook** (`.github/workflows/upstream-release-webhook.yml`): 
+   - Runs daily to check for new releases in the upstream "cline/cline" repository
+   - When a new release is detected, it triggers the Sync Upstream Release workflow
+
+2. **Sync Upstream Release** (`.github/workflows/sync-upstream-release.yml`):
+   - Fetches and checks out the new tag from the upstream repository
+   - Creates a new branch based on that tag
+   - Applies the codemods
+   - Commits the changes and creates a pull request
+
+After the pull request is merged, you can use the existing "Publish Release" workflow to publish a new release.
+
+You can also manually trigger the Sync Upstream Release workflow from the GitHub Actions tab, optionally specifying a specific tag to sync.

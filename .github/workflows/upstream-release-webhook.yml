@@ -1,0 +1,76 @@
+name: Upstream Release Webhook
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every day at midnight UTC
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: read
+  repository-projects: read
+
+jobs:
+  check-upstream-releases:
+    name: Check Upstream Releases
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Get Latest Local Tag
+        id: get_local_tag
+        run: |
+          LOCAL_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "local_tag=$LOCAL_TAG" >> $GITHUB_OUTPUT
+          echo "Latest local tag: $LOCAL_TAG"
+      
+      - name: Get Latest Upstream Tag
+        id: get_upstream_tag
+        run: |
+          # Get latest tag from upstream cline/cline repository
+          UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/releases/latest | jq -r .tag_name)
+          
+          if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
+            echo "Failed to get latest upstream tag, using GitHub API to get tags"
+            UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/tags | jq -r '.[0].name')
+          fi
+          
+          if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
+            echo "Failed to get latest upstream tag"
+            exit 1
+          fi
+          
+          echo "upstream_tag=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
+          echo "Latest upstream tag: $UPSTREAM_TAG"
+      
+      - name: Compare Tags
+        id: compare_tags
+        run: |
+          LOCAL_TAG=${{ steps.get_local_tag.outputs.local_tag }}
+          UPSTREAM_TAG=${{ steps.get_upstream_tag.outputs.upstream_tag }}
+          
+          # Remove 'v' prefix for version comparison
+          LOCAL_VERSION=${LOCAL_TAG#v}
+          UPSTREAM_VERSION=${UPSTREAM_TAG#v}
+          
+          # Compare versions
+          if [ "$LOCAL_TAG" != "$UPSTREAM_TAG" ]; then
+            echo "New upstream version detected: $UPSTREAM_TAG (local: $LOCAL_TAG)"
+            echo "new_version=true" >> $GITHUB_OUTPUT
+            echo "upstream_tag=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "Already on latest version: $LOCAL_TAG"
+            echo "new_version=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Trigger Sync Workflow
+        if: steps.compare_tags.outputs.new_version == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: upstream-release
+          client-payload: '{"tag": "${{ steps.compare_tags.outputs.upstream_tag }}"}'
