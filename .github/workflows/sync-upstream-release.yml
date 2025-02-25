@@ -90,6 +90,7 @@ jobs:
         run: |
           npm install
           npm ci
+          npm run format:fix
       - name: Commit Changes
         id: commit
         run: |
@@ -100,7 +101,6 @@ jobs:
           git commit -m "Sync with upstream $TAG and apply codemods"
           
           # Push the branch
-          git push -u origin HEAD
           
           echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
           echo "Changes committed and pushed to branch: $(git rev-parse --abbrev-ref HEAD)"
