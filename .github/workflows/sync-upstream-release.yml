@@ -66,7 +66,8 @@ jobs:
           fi
           
           # Create new branch from upstream tag
-          git checkout -b "$BRANCH" "upstream/$TAG"
+          git checkout -b $BRANCH tags/$TAG
+          git merge main
           
           # If the tag doesn't exist as a branch, try checking out the tag directly
           if [ $? -ne 0 ]; then
@@ -76,8 +77,6 @@ jobs:
           
           echo "Created branch: $BRANCH"
       
-      - name: Install Dependencies
-        run: npm ci
       
       - name: Apply Codemods
         run: |
@@ -87,6 +86,8 @@ jobs:
           # Apply codemods
           node codemods/apply.js
       
+      - name: Install Dependencies
+        run: npm ci
       - name: Commit Changes
         id: commit
         run: |
