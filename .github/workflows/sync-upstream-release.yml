@@ -1,0 +1,104 @@
+name: Sync Upstream Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Upstream tag to sync (e.g., v3.4.8)'
+        required: false
+        type: string
+  repository_dispatch:
+    types: [upstream-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-upstream-release:
+    name: Sync Upstream Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.15.1
+      
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      
+      - name: Add Upstream Remote
+        run: |
+          git remote add upstream https://github.com/cline/cline.git
+          git fetch upstream --tags
+      
+      - name: Determine Latest Tag
+        id: get_tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          elif [ -n "${{ github.event.client_payload.tag }}" ]; then
+            TAG="${{ github.event.client_payload.tag }}"
+          else
+            TAG=$(git ls-remote --tags --sort='-v:refname' upstream | grep -v '\^{}' | head -n1 | sed 's/.*refs\/tags\///')
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Selected tag: $TAG"
+      
+      - name: Create New Branch
+        run: |
+          TAG=${{ steps.get_tag.outputs.tag }}
+          VERSION=${TAG#v}
+          BRANCH="sync-upstream-$TAG"
+          
+          # Check if branch already exists
+          if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+            echo "Branch $BRANCH already exists, deleting it"
+            git branch -D "$BRANCH"
+          fi
+          
+          # Create new branch from upstream tag
+          git checkout -b "$BRANCH" "upstream/$TAG"
+          
+          # If the tag doesn't exist as a branch, try checking out the tag directly
+          if [ $? -ne 0 ]; then
+            echo "Trying to checkout tag directly"
+            git checkout -b "$BRANCH" "upstream/$TAG" || git checkout -b "$BRANCH" "$TAG"
+          fi
+          
+          echo "Created branch: $BRANCH"
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Apply Codemods
+        run: |
+          # Ensure fs-extra is installed for the codemod script
+          npm install fs-extra ts-morph
+          
+          # Apply codemods
+          node codemods/apply.js
+      
+      - name: Commit Changes
+        id: commit
+        run: |
+          TAG=${{ steps.get_tag.outputs.tag }}
+          VERSION=${TAG#v}
+          
+          git add .
+          git commit -m "Sync with upstream $TAG and apply codemods"
+          
+          # Push the branch
+          git push -u origin HEAD
+          
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+          echo "Changes committed and pushed to branch: $(git rev-parse --abbrev-ref HEAD)"
+      
