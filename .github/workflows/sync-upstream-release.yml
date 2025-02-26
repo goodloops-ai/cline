@@ -7,6 +7,11 @@ on:
                 description: "Upstream tag to sync (e.g., v3.4.8)"
                 required: false
                 type: string
+            force:
+                description: "Force sync even if version exists locally"
+                required: false
+                type: boolean
+                default: false
     schedule:
         # Run every day at midnight UTC
         - cron: "0 0 * * *"
@@ -22,81 +27,66 @@ jobs:
         name: Check for New Upstream Releases
         runs-on: ubuntu-latest
         outputs:
-            new_version: ${{ steps.compare_tags.outputs.new_version }}
-            upstream_tag: ${{ steps.get_upstream_tag.outputs.upstream_tag }}
+            new_version: ${{ steps.compare_versions.outputs.new_version }}
+            upstream_version: ${{ steps.get_upstream_version.outputs.version }}
 
         steps:
             - name: Checkout Repository
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 1
+                  fetch-depth: 0
 
-            - name: Get Latest Local Tag
-              id: get_local_tag
+            - name: Get Upstream Version
+              id: get_upstream_version
               run: |
-                  LOCAL_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-                  echo "local_tag=$LOCAL_TAG" >> $GITHUB_OUTPUT
-                  echo "Latest local tag: $LOCAL_TAG"
-
-            - name: Get Latest Upstream Tag
-              id: get_upstream_tag
-              run: |
-                  # Use provided tag if available
+                  # Use provided tag if available, stripping 'v' prefix if present
                   if [ -n "${{ github.event.inputs.tag }}" ]; then
-                    UPSTREAM_TAG="${{ github.event.inputs.tag }}"
-                    echo "Using provided tag: $UPSTREAM_TAG"
+                    VERSION="${{ github.event.inputs.tag }}"
+                    VERSION="${VERSION#v}"
+                    echo "Using provided version: $VERSION"
                   else
-                    # Get all tags from upstream sorted by version number (not alphabetically)
-                    UPSTREAM_TAGS=$(curl -s https://api.github.com/repos/cline/cline/tags | jq -r '.[].name' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)
-                    
-                    if [ -z "$UPSTREAM_TAGS" ]; then
-                      echo "Failed to get upstream tags"
+                    # Get version from upstream main branch package.json
+                    VERSION=$(curl -s https://raw.githubusercontent.com/cline/cline/main/package.json | jq -r '.version')
+                    if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+                      echo "Failed to get version from upstream package.json"
                       exit 1
                     fi
-                    
-                    # Sort versions using sort -V (version sort) and get the latest
-                    UPSTREAM_TAG=$(echo "$UPSTREAM_TAGS" | sort -rV | head -n1)
-                    
-                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
-                      echo "Failed to determine latest upstream tag"
-                      exit 1
-                    fi
-                    
-                    echo "Found latest upstream tag: $UPSTREAM_TAG"
+                    echo "Found upstream version: $VERSION"
                   fi
+                  
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-                  echo "upstream_tag=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
-                  echo "Latest upstream tag: $UPSTREAM_TAG"
-
-            - name: Compare Tags
-              id: compare_tags
+            - name: Check Local Version Status
+              id: compare_versions
               run: |
-                  LOCAL_TAG=${{ steps.get_local_tag.outputs.local_tag }}
-                  UPSTREAM_TAG=${{ steps.get_upstream_tag.outputs.upstream_tag }}
-
-                  # Force sync if manual trigger with tag
-                  if [ -n "${{ github.event.inputs.tag }}" ]; then
-                    echo "Manual trigger with tag, forcing sync"
-                    echo "new_version=true" >> $GITHUB_OUTPUT
-                  else
-                    # Compare versions
-                    if [ "$LOCAL_TAG" != "$UPSTREAM_TAG" ]; then
-                      echo "New upstream version detected: $UPSTREAM_TAG (local: $LOCAL_TAG)"
+                  UPSTREAM_VERSION="${{ steps.get_upstream_version.outputs.version }}"
+                  FORCE="${{ github.event.inputs.force }}"
+                  
+                  # Check if we already have this version in a branch or tag
+                  if git show-ref --verify --quiet "refs/tags/v${UPSTREAM_VERSION}" || \
+                     git show-ref --verify --quiet "refs/heads/sync-upstream-v${UPSTREAM_VERSION}" || \
+                     git show-ref --verify --quiet "refs/remotes/origin/sync-upstream-v${UPSTREAM_VERSION}"; then
+                    
+                    if [ "$FORCE" = "true" ]; then
+                      echo "Version ${UPSTREAM_VERSION} exists locally, but force flag is set"
                       echo "new_version=true" >> $GITHUB_OUTPUT
                     else
-                      echo "Already on latest version: $LOCAL_TAG"
+                      echo "Version ${UPSTREAM_VERSION} already exists locally and force flag is not set"
                       echo "new_version=false" >> $GITHUB_OUTPUT
                     fi
+                  else
+                    echo "Version ${UPSTREAM_VERSION} does not exist locally"
+                    echo "new_version=true" >> $GITHUB_OUTPUT
                   fi
 
     sync-upstream-release:
         name: Sync Upstream Release
         needs: check-upstream-releases
-        if: needs.check-upstream-releases.outputs.new_version == 'true' || github.event.inputs.tag != ''
+        if: needs.check-upstream-releases.outputs.new_version == 'true'
         runs-on: ubuntu-latest
         outputs:
             branch: ${{ steps.commit.outputs.branch }}
-            upstream_tag: ${{ needs.check-upstream-releases.outputs.upstream_tag }}
+            version: ${{ needs.check-upstream-releases.outputs.upstream_version }}
 
         steps:
             - name: Checkout Repository
@@ -119,18 +109,10 @@ jobs:
                   git remote add upstream https://github.com/cline/cline.git
                   git fetch upstream --tags
 
-            - name: Get Tag to Sync
-              id: get_tag
-              run: |
-                  TAG="${{ needs.check-upstream-releases.outputs.upstream_tag }}"
-                  echo "tag=$TAG" >> $GITHUB_OUTPUT
-                  echo "Syncing tag: $TAG"
-
             - name: Create New Branch
               run: |
-                  TAG=${{ steps.get_tag.outputs.tag }}
-                  VERSION=${TAG#v}
-                  BASE_BRANCH="sync-upstream-$TAG"
+                  VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
+                  BASE_BRANCH="sync-upstream-v${VERSION}"
 
                   # Find the next available branch suffix
                   COUNTER=1
@@ -142,22 +124,19 @@ jobs:
                   done
 
                   echo "Using branch name: $BRANCH"
+                  echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+                  echo "counter=$((COUNTER - 1))" >> $GITHUB_OUTPUT
 
-                  # Create new branch directly from upstream tag without merging main
-                  if git show-ref --verify --quiet "refs/tags/$TAG"; then
-                    echo "Creating branch from tag $TAG"
-                    git checkout -b $BRANCH tags/$TAG
-                  elif git show-ref --verify --quiet "refs/remotes/upstream/$TAG"; then
-                    echo "Creating branch from upstream/$TAG"
-                    git checkout -b "$BRANCH" "upstream/$TAG"
-                  else
-                    echo "Creating branch from $TAG"
-                    git checkout -b "$BRANCH" "$TAG"
-                  fi
+                  # Create new branch from upstream main
+                  git fetch upstream main
+                  git checkout -b "$BRANCH" upstream/main
 
                   # Selectively copy files from main branch
                   echo "Copying files from main branch..."
                   git checkout main -- codemods/
+                  git checkout main -- .github/workflows/sync-upstream-release.yml
+                  git checkout main -- .github/workflows/publish.yml
+                  git checkout main -- .github/workflows/test.yml
 
                   echo "Created branch: $BRANCH"
 
@@ -178,17 +157,17 @@ jobs:
             - name: Commit Changes
               id: commit
               run: |
-                  TAG=${{ steps.get_tag.outputs.tag }}
-                  VERSION=${TAG#v}
+                  VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
 
                   git add .
-                  git commit -m "Sync with upstream $TAG and apply codemods"
+                  git commit -m "Sync with upstream v${VERSION} and apply codemods"
 
                   # Push the branch
                   git push -u origin HEAD
 
+                  # Pass through the branch name and counter
                   echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
-                  echo "Changes committed and pushed to branch: $(git rev-parse --abbrev-ref HEAD)"
+                  echo "counter=${{ steps.create_new_branch.outputs.counter }}" >> $GITHUB_OUTPUT
 
     # Run tests on the synced code
     test:
@@ -212,9 +191,9 @@ jobs:
                   token: ${{ secrets.GITHUB_TOKEN }}
                   branch: ${{ needs.sync-upstream-release.outputs.branch }}
                   base: main
-                  title: "[DO NOT MERGE] Reference: Sync with upstream ${{ needs.sync-upstream-release.outputs.upstream_tag }}"
+                  title: "[DO NOT MERGE] Reference: Sync with upstream v${{ needs.check-upstream-releases.outputs.upstream_version }}"
                   body: |
-                      This PR is for reference only to show the changes from upstream ${{ needs.sync-upstream-release.outputs.upstream_tag }}.
+                      This PR is for reference only to show the changes from upstream v${{ needs.check-upstream-releases.outputs.upstream_version }}.
 
                       The changes have been automatically published from the sync branch.
                       DO NOT MERGE THIS PR - it is only for tracking purposes.
@@ -234,5 +213,6 @@ jobs:
                   client-payload: |
                       {
                         "release-type": "release",
-                        "branch": "${{ needs.sync-upstream-release.outputs.branch }}"
+                        "branch": "${{ needs.sync-upstream-release.outputs.branch }}",
+                        "counter": "${{ needs.sync-upstream-release.outputs.counter }}"
                       }
