@@ -7,15 +7,84 @@ on:
                 description: "Upstream tag to sync (e.g., v3.4.8)"
                 required: false
                 type: string
-    repository_dispatch:
-        types: [upstream-release]
+    schedule:
+        # Run every day at midnight UTC
+        - cron: "0 0 * * *"
 
 permissions:
     contents: write
 
 jobs:
+    check-upstream-releases:
+        name: Check for New Upstream Releases
+        runs-on: ubuntu-latest
+        outputs:
+            new_version: ${{ steps.compare_tags.outputs.new_version }}
+            upstream_tag: ${{ steps.get_upstream_tag.outputs.upstream_tag }}
+            
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Get Latest Local Tag
+              id: get_local_tag
+              run: |
+                  LOCAL_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+                  echo "local_tag=$LOCAL_TAG" >> $GITHUB_OUTPUT
+                  echo "Latest local tag: $LOCAL_TAG"
+
+            - name: Get Latest Upstream Tag
+              id: get_upstream_tag
+              run: |
+                  # Use provided tag if available
+                  if [ -n "${{ github.event.inputs.tag }}" ]; then
+                    UPSTREAM_TAG="${{ github.event.inputs.tag }}"
+                    echo "Using provided tag: $UPSTREAM_TAG"
+                  else
+                    # Get latest tag from upstream cline/cline repository
+                    UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/releases/latest | jq -r .tag_name)
+
+                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
+                      echo "Failed to get latest upstream tag, using GitHub API to get tags"
+                      UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/tags | jq -r '.[0].name')
+                    fi
+
+                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
+                      echo "Failed to get latest upstream tag"
+                      exit 1
+                    fi
+                  fi
+
+                  echo "upstream_tag=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
+                  echo "Latest upstream tag: $UPSTREAM_TAG"
+
+            - name: Compare Tags
+              id: compare_tags
+              run: |
+                  LOCAL_TAG=${{ steps.get_local_tag.outputs.local_tag }}
+                  UPSTREAM_TAG=${{ steps.get_upstream_tag.outputs.upstream_tag }}
+
+                  # Force sync if manual trigger with tag
+                  if [ -n "${{ github.event.inputs.tag }}" ]; then
+                    echo "Manual trigger with tag, forcing sync"
+                    echo "new_version=true" >> $GITHUB_OUTPUT
+                  else
+                    # Compare versions
+                    if [ "$LOCAL_TAG" != "$UPSTREAM_TAG" ]; then
+                      echo "New upstream version detected: $UPSTREAM_TAG (local: $LOCAL_TAG)"
+                      echo "new_version=true" >> $GITHUB_OUTPUT
+                    else
+                      echo "Already on latest version: $LOCAL_TAG"
+                      echo "new_version=false" >> $GITHUB_OUTPUT
+                    fi
+                  fi
+
     sync-upstream-release:
         name: Sync Upstream Release
+        needs: check-upstream-releases
+        if: needs.check-upstream-releases.outputs.new_version == 'true' || github.event.inputs.tag != ''
         runs-on: ubuntu-latest
 
         steps:
@@ -39,18 +108,12 @@ jobs:
                   git remote add upstream https://github.com/cline/cline.git
                   git fetch upstream --tags
 
-            - name: Determine Latest Tag
+            - name: Get Tag to Sync
               id: get_tag
               run: |
-                  if [ -n "${{ github.event.inputs.tag }}" ]; then
-                    TAG="${{ github.event.inputs.tag }}"
-                  elif [ -n "${{ github.event.client_payload.tag }}" ]; then
-                    TAG="${{ github.event.client_payload.tag }}"
-                  else
-                    TAG=$(git ls-remote --tags --sort='-v:refname' upstream | grep -v '\^{}' | head -n1 | sed 's/.*refs\/tags\///')
-                  fi
+                  TAG="${{ needs.check-upstream-releases.outputs.upstream_tag }}"
                   echo "tag=$TAG" >> $GITHUB_OUTPUT
-                  echo "Selected tag: $TAG"
+                  echo "Syncing tag: $TAG"
 
             - name: Create New Branch
               run: |
