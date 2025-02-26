@@ -78,7 +78,7 @@ jobs:
               run: |
                   # Get base version from package.json
                   BASE_VERSION=$(node -p "require('./package.json').version")
-                  
+
                   # If this is from a sync branch (repository_dispatch), add the fork suffix
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
                     # Extract counter from branch name if it exists (e.g., sync-upstream-v1.0.0.2 -> .2)
@@ -93,9 +93,9 @@ jobs:
                   else
                     VERSION="${BASE_VERSION}"
                   fi
-                  
+
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  
+
                   # Update package.json if version changed
                   if [ "$VERSION" != "$BASE_VERSION" ]; then
                     npm version $VERSION --no-git-tag-version
@@ -116,17 +116,17 @@ jobs:
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
               run: |
                   VERSION="${{ steps.get_version.outputs.version }}"
-                  
+
                   # Update version in package.json and package-lock.json
                   npm version "$VERSION" --no-git-tag-version --allow-same-version
-                  
+
                   # Also update version in webview-ui if it exists
                   if [ -f "webview-ui/package.json" ]; then
                     cd webview-ui
                     npm version "$VERSION" --no-git-tag-version --allow-same-version
                     cd ..
                   fi
-                  
+
                   # Required to generate the .vsix
                   vsce package --out "goodloops-cline-$VERSION.vsix"
 

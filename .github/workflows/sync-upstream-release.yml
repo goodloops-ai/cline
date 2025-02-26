@@ -131,7 +131,7 @@ jobs:
                   TAG=${{ steps.get_tag.outputs.tag }}
                   VERSION=${TAG#v}
                   BASE_BRANCH="sync-upstream-$TAG"
-                  
+
                   # Find the next available branch suffix
                   COUNTER=1
                   BRANCH="$BASE_BRANCH"
@@ -140,7 +140,7 @@ jobs:
                     BRANCH="${BASE_BRANCH}.${COUNTER}"
                     COUNTER=$((COUNTER + 1))
                   done
-                  
+
                   echo "Using branch name: $BRANCH"
 
                   # Create new branch directly from upstream tag without merging main
