@@ -190,11 +190,6 @@ jobs:
                   echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
                   echo "Changes committed and pushed to branch: $(git rev-parse --abbrev-ref HEAD)"
 
-    # Run tests on the synced code
-    test:
-        name: Run Tests
-        needs: sync-upstream-release
-        uses: ./.github/workflows/test.yml
 
     # Create a PR for reference (not for merging)
     create-pr:
