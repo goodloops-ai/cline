@@ -125,13 +125,18 @@ jobs:
               run: |
                   TAG=${{ steps.get_tag.outputs.tag }}
                   VERSION=${TAG#v}
-                  BRANCH="sync-upstream-$TAG"
-
-                  # Check if branch already exists
-                  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-                    echo "Branch $BRANCH already exists, deleting it"
-                    git branch -D "$BRANCH"
-                  fi
+                  BASE_BRANCH="sync-upstream-$TAG"
+                  
+                  # Find the next available branch suffix
+                  COUNTER=1
+                  BRANCH="$BASE_BRANCH"
+                  while git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; do
+                    echo "Branch $BRANCH already exists on remote"
+                    BRANCH="${BASE_BRANCH}.${COUNTER}"
+                    COUNTER=$((COUNTER + 1))
+                  done
+                  
+                  echo "Using branch name: $BRANCH"
 
                   # Create new branch directly from upstream tag without merging main
                   if git show-ref --verify --quiet "refs/tags/$TAG"; then
