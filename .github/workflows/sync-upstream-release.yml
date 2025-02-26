@@ -46,18 +46,23 @@ jobs:
                     UPSTREAM_TAG="${{ github.event.inputs.tag }}"
                     echo "Using provided tag: $UPSTREAM_TAG"
                   else
-                    # Get latest tag from upstream cline/cline repository
-                    UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/releases/latest | jq -r .tag_name)
-
-                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
-                      echo "Failed to get latest upstream tag, using GitHub API to get tags"
-                      UPSTREAM_TAG=$(curl -s https://api.github.com/repos/cline/cline/tags | jq -r '.[0].name')
-                    fi
-
-                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
-                      echo "Failed to get latest upstream tag"
+                    # Get all tags from upstream sorted by version number (not alphabetically)
+                    UPSTREAM_TAGS=$(curl -s https://api.github.com/repos/cline/cline/tags | jq -r '.[].name' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)
+                    
+                    if [ -z "$UPSTREAM_TAGS" ]; then
+                      echo "Failed to get upstream tags"
                       exit 1
                     fi
+                    
+                    # Sort versions using sort -V (version sort) and get the latest
+                    UPSTREAM_TAG=$(echo "$UPSTREAM_TAGS" | sort -rV | head -n1)
+                    
+                    if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" = "null" ]; then
+                      echo "Failed to determine latest upstream tag"
+                      exit 1
+                    fi
+                    
+                    echo "Found latest upstream tag: $UPSTREAM_TAG"
                   fi
 
                   echo "upstream_tag=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
