@@ -3,10 +3,6 @@ name: Sync Upstream Release
 on:
     workflow_dispatch:
         inputs:
-            tag:
-                description: "Upstream tag to sync (e.g., v3.4.8)"
-                required: false
-                type: string
             force:
                 description: "Force sync even if version exists locally"
                 required: false
@@ -39,21 +35,13 @@ jobs:
             - name: Get Upstream Version
               id: get_upstream_version
               run: |
-                  # Use provided tag if available, stripping 'v' prefix if present
-                  if [ -n "${{ github.event.inputs.tag }}" ]; then
-                    VERSION="${{ github.event.inputs.tag }}"
-                    VERSION="${VERSION#v}"
-                    echo "Using provided version: $VERSION"
-                  else
-                    # Get version from upstream main branch package.json
-                    VERSION=$(curl -s https://raw.githubusercontent.com/cline/cline/main/package.json | jq -r '.version')
-                    if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-                      echo "Failed to get version from upstream package.json"
-                      exit 1
-                    fi
-                    echo "Found upstream version: $VERSION"
+                  # Get version from upstream main branch package.json
+                  VERSION=$(curl -s https://raw.githubusercontent.com/cline/cline/main/package.json | jq -r '.version')
+                  if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+                    echo "Failed to get version from upstream package.json"
+                    exit 1
                   fi
-
+                  echo "Found upstream version: $VERSION"
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
 
             - name: Check Local Version Status
@@ -112,20 +100,26 @@ jobs:
             - name: Create New Branch
               run: |
                   VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
-                  BASE_BRANCH="sync-upstream-v${VERSION}"
 
-                  # Find the next available branch suffix
-                  COUNTER=1
-                  BRANCH="$BASE_BRANCH"
-                  while git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; do
-                    echo "Branch $BRANCH already exists on remote"
-                    BRANCH="${BASE_BRANCH}.${COUNTER}"
-                    COUNTER=$((COUNTER + 1))
+                  # Split version into parts
+                  IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+                  BASE_BRANCH="sync-upstream-v${MAJOR}.${MINOR}.${PATCH}"
+
+                  # Find the next available counter (0-9)
+                  for COUNTER in {0..9}; do
+                    BRANCH="${BASE_BRANCH}${COUNTER}"
+                    if ! git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+                      break
+                    fi
+                    if [ "$COUNTER" = "9" ]; then
+                      echo "Error: All counters (0-9) are already used for this version"
+                      exit 1
+                    fi
                   done
 
                   echo "Using branch name: $BRANCH"
                   echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-                  echo "counter=$((COUNTER - 1))" >> $GITHUB_OUTPUT
+                  echo "counter=$COUNTER" >> $GITHUB_OUTPUT
 
                   # Create new branch from upstream main
                   git fetch upstream main
@@ -134,6 +128,9 @@ jobs:
                   # Selectively copy files from main branch
                   echo "Copying files from main branch..."
                   git checkout main -- codemods/
+                  git checkout main -- .github/workflows/sync-upstream-release.yml
+                  git checkout main -- .github/workflows/publish.yml
+                  git checkout main -- .github/workflows/test.yml
 
                   echo "Created branch: $BRANCH"
 
