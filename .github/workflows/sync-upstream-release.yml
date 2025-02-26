@@ -158,9 +158,6 @@ jobs:
                   # Selectively copy files from main branch
                   echo "Copying files from main branch..."
                   git checkout main -- codemods/
-                  git checkout main -- .github/workflows/sync-upstream-release.yml
-                  git checkout main -- .github/workflows/publish.yml
-                  git checkout main -- .github/workflows/test.yml
 
                   echo "Created branch: $BRANCH"
 
