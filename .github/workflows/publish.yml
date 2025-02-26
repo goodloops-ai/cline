@@ -34,6 +34,8 @@ jobs:
         name: Publish Extension
         runs-on: ubuntu-latest
         environment: publish
+        env:
+            CI: false
 
         steps:
             - uses: actions/checkout@v4
@@ -78,24 +80,23 @@ jobs:
               run: |
                   # Get base version from package.json
                   BASE_VERSION=$(node -p "require('./package.json').version")
-
+                  
                   # If this is from a sync branch (repository_dispatch), add the fork suffix
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-                    # Extract counter from branch name if it exists (e.g., sync-upstream-v1.0.0.2 -> .2)
-                    BRANCH="${{ github.event.client_payload.branch }}"
+                    # Get counter from client payload if it exists
+                    COUNTER="${{ github.event.client_payload.counter }}"
                     COUNTER_SUFFIX=""
-                    if [[ $BRANCH =~ \.[0-9]+$ ]]; then
-                      COUNTER_SUFFIX="${BRANCH##*.}"
-                      COUNTER_SUFFIX=".${COUNTER_SUFFIX}"
+                    if [ -n "$COUNTER" ] && [ "$COUNTER" != "0" ]; then
+                      COUNTER_SUFFIX=".${COUNTER}"
                     fi
                     
                     VERSION="${BASE_VERSION}-fork${COUNTER_SUFFIX}.${GITHUB_SHA:0:7}"
                   else
                     VERSION="${BASE_VERSION}"
                   fi
-
+                  
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
-
+                  
                   # Update package.json if version changed
                   if [ "$VERSION" != "$BASE_VERSION" ]; then
                     npm version $VERSION --no-git-tag-version
