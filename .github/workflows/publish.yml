@@ -80,7 +80,7 @@ jobs:
               run: |
                   # Get base version from package.json
                   BASE_VERSION=$(node -p "require('./package.json').version")
-                  
+
                   # If this is from a sync branch (repository_dispatch), add the fork suffix
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
                     # Get counter from client payload if it exists
@@ -94,9 +94,9 @@ jobs:
                   else
                     VERSION="${BASE_VERSION}"
                   fi
-                  
+
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
-                  
+
                   # Update package.json if version changed
                   if [ "$VERSION" != "$BASE_VERSION" ]; then
                     npm version $VERSION --no-git-tag-version
