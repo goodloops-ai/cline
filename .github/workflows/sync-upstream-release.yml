@@ -98,6 +98,7 @@ jobs:
                   git fetch upstream --tags
 
             - name: Create New Branch
+              id: create_new_branch
               run: |
                   VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
 
@@ -125,14 +126,12 @@ jobs:
                   git fetch upstream main
                   git checkout -b "$BRANCH" upstream/main
 
-                  # Selectively copy files from main branch
-                  echo "Copying files from main branch..."
-                  git checkout main -- codemods/
-                  git checkout main -- .github/workflows/sync-upstream-release.yml
-                  git checkout main -- .github/workflows/publish.yml
-                  git checkout main -- .github/workflows/test.yml
+                  # Save the current state as the base sync
+                  git add .
+                  git commit -m "Sync with upstream v${VERSION}"
 
-                  echo "Created branch: $BRANCH"
+                  # Now bring in just the codemods directory from our main
+                  git checkout main -- codemods/
 
             - name: Apply Codemods
               run: |
@@ -141,6 +140,9 @@ jobs:
 
                   # Apply codemods to clean upstream code
                   node codemods/apply.js
+
+                  # Remove the codemods directory since we don't want to commit it
+                  rm -rf codemods/
 
             - name: Install Dependencies
               run: |
@@ -153,10 +155,13 @@ jobs:
               run: |
                   VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
 
-                  git add .
-                  git commit -m "Sync with upstream v${VERSION} and apply codemods"
+                  # Add all changes from codemods (but not the codemods directory itself since we removed it)
+                  git add -A
 
-                  # Push the branch
+                  # Commit the codemod changes
+                  git commit -m "Apply codemods to upstream v${VERSION}"
+
+                  # Push all changes
                   git push -u origin HEAD
 
                   # Pass through the branch name and counter
