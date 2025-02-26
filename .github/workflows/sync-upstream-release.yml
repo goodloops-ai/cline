@@ -122,11 +122,21 @@ jobs:
                   echo "branch=$BRANCH" >> $GITHUB_OUTPUT
                   echo "counter=$COUNTER" >> $GITHUB_OUTPUT
 
-                  # Create new branch from upstream main
+                  # Fetch upstream main branch
+                  echo "Fetching upstream main..."
                   git fetch upstream main
-                  git checkout -b "$BRANCH" upstream/main
+
+                  # Create new branch from upstream/main
+                  echo "Creating new branch $BRANCH from upstream/main..."
+                  git switch -c "$BRANCH" upstream/main
+
+                  # Verify we're on the right branch and have upstream content
+                  echo "Current branch: $(git branch --show-current)"
+                  echo "Current commit: $(git rev-parse HEAD)"
+                  echo "Upstream main commit: $(git rev-parse upstream/main)"
 
                   # Now bring in just the codemods directory from our main
+                  echo "Copying codemods from our main..."
                   git checkout main -- codemods/
 
             - name: Apply Codemods
@@ -135,9 +145,11 @@ jobs:
                   npm install fs-extra ts-morph
 
                   # Apply codemods to clean upstream code
+                  echo "Applying codemods..."
                   node codemods/apply.js
 
                   # Remove the codemods directory since we don't want to commit it
+                  echo "Removing codemods directory..."
                   rm -rf codemods/
 
             - name: Install Dependencies
@@ -150,54 +162,36 @@ jobs:
               id: commit
               run: |
                   VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
+                  BRANCH="${{ steps.create_new_branch.outputs.branch }}"
 
-                  # Add all changes from codemods (but not the codemods directory itself since we removed it)
+                  # Verify we're still on the right branch
+                  CURRENT_BRANCH=$(git branch --show-current)
+                  if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
+                    echo "Error: Not on expected branch $BRANCH (on $CURRENT_BRANCH instead)"
+                    exit 1
+                  fi
+
+                  # Add all changes from codemods
+                  echo "Adding modified files..."
                   git add -A
+                  git status
 
                   # Commit the codemod changes
+                  echo "Committing changes..."
                   git commit -m "Apply codemods to upstream v${VERSION}"
 
-                  # Push all changes
-                  git push -u origin HEAD
+                  # Push to our fork
+                  echo "Pushing to origin $BRANCH..."
+                  git push -u origin "$BRANCH"
 
                   # Pass through the branch name and counter
-                  echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+                  echo "branch=$BRANCH" >> $GITHUB_OUTPUT
                   echo "counter=${{ steps.create_new_branch.outputs.counter }}" >> $GITHUB_OUTPUT
-
-    # Run tests on the synced code
-    test:
-        name: Run Tests
-        needs: sync-upstream-release
-        uses: ./.github/workflows/test.yml
-
-    # Create a PR for reference (not for merging)
-    create-pr:
-        name: Create Reference Pull Request
-        needs: [sync-upstream-release, test]
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
-
-            - name: Create Pull Request
-              id: create-pr
-              uses: peter-evans/create-pull-request@v5
-              with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  branch: ${{ needs.sync-upstream-release.outputs.branch }}
-                  base: main
-                  title: "[DO NOT MERGE] Reference: Sync with upstream v${{ needs.check-upstream-releases.outputs.upstream_version }}"
-                  body: |
-                      This PR is for reference only to show the changes from upstream v${{ needs.check-upstream-releases.outputs.upstream_version }}.
-
-                      The changes have been automatically published from the sync branch.
-                      DO NOT MERGE THIS PR - it is only for tracking purposes.
-                  labels: sync-upstream,do-not-merge
 
     # Trigger the publish workflow with the sync branch
     publish:
         name: Trigger Publish Workflow
-        needs: [sync-upstream-release, test, create-pr]
+        needs: [sync-upstream-release]
         runs-on: ubuntu-latest
         steps:
             - name: Trigger publish workflow
