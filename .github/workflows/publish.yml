@@ -133,12 +133,12 @@ jobs:
                   # Determine release type (from workflow_dispatch input or repository_dispatch payload)
                   RELEASE_TYPE="${{ github.event.inputs.release-type || github.event.client_payload.release-type }}"
 
-                  if [ "$RELEASE_TYPE" = "pre-release" ]; then
-                    vsce publish --pat "$VSCE_PAT" --pre-release
-                    echo "Successfully published pre-release version $VERSION to VS Code Marketplace and Open VSX Registry"
+                  if [ "${{ github.event.inputs.release-type }}" = "pre-release" ]; then
+                    npm run publish:marketplace:prerelease
+                    echo "Successfully published pre-release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
                   else
-                    vsce publish --pat "$VSCE_PAT"
-                    echo "Successfully published release version $VERSION to VS Code Marketplace and Open VSX Registry"
+                    npm run publish:marketplace
+                    echo "Successfully published release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
                   fi
 
             # - name: Get Changelog Entry
