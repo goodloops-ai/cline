@@ -78,16 +78,24 @@ jobs:
               run: |
                   # Get base version from package.json
                   BASE_VERSION=$(node -p "require('./package.json').version")
-
+                  
                   # If this is from a sync branch (repository_dispatch), add the fork suffix
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-                    VERSION="${BASE_VERSION}-fork.${GITHUB_SHA:0:7}"
+                    # Extract counter from branch name if it exists (e.g., sync-upstream-v1.0.0.2 -> .2)
+                    BRANCH="${{ github.event.client_payload.branch }}"
+                    COUNTER_SUFFIX=""
+                    if [[ $BRANCH =~ \.[0-9]+$ ]]; then
+                      COUNTER_SUFFIX="${BRANCH##*.}"
+                      COUNTER_SUFFIX=".${COUNTER_SUFFIX}"
+                    fi
+                    
+                    VERSION="${BASE_VERSION}-fork${COUNTER_SUFFIX}.${GITHUB_SHA:0:7}"
                   else
                     VERSION="${BASE_VERSION}"
                   fi
-
+                  
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
-
+                  
                   # Update package.json if version changed
                   if [ "$VERSION" != "$BASE_VERSION" ]; then
                     npm version $VERSION --no-git-tag-version
@@ -107,18 +115,30 @@ jobs:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
               run: |
+                  VERSION="${{ steps.get_version.outputs.version }}"
+                  
+                  # Update version in package.json and package-lock.json
+                  npm version "$VERSION" --no-git-tag-version --allow-same-version
+                  
+                  # Also update version in webview-ui if it exists
+                  if [ -f "webview-ui/package.json" ]; then
+                    cd webview-ui
+                    npm version "$VERSION" --no-git-tag-version --allow-same-version
+                    cd ..
+                  fi
+                  
                   # Required to generate the .vsix
-                  vsce package --out "goodloops-cline-${{ steps.get_version.outputs.version }}.vsix"
+                  vsce package --out "goodloops-cline-$VERSION.vsix"
 
                   # Determine release type (from workflow_dispatch input or repository_dispatch payload)
                   RELEASE_TYPE="${{ github.event.inputs.release-type || github.event.client_payload.release-type }}"
 
                   if [ "$RELEASE_TYPE" = "pre-release" ]; then
-                    npm run publish:marketplace:prerelease
-                    echo "Successfully published pre-release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
+                    vsce publish --pat "$VSCE_PAT" --pre-release
+                    echo "Successfully published pre-release version $VERSION to VS Code Marketplace and Open VSX Registry"
                   else
-                    npm run publish:marketplace
-                    echo "Successfully published release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
+                    vsce publish --pat "$VSCE_PAT"
+                    echo "Successfully published release version $VERSION to VS Code Marketplace and Open VSX Registry"
                   fi
 
             # - name: Get Changelog Entry
