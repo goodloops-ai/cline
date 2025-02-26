@@ -145,7 +145,12 @@ jobs:
                     git checkout -b "$BRANCH" "$TAG"
                   fi
 
-                  git merge main
+                  # Selectively copy files from main branch
+                  echo "Copying files from main branch..."
+                  git checkout main -- codemods/
+                  git checkout main -- .github/workflows/sync-upstream-release.yml
+                  git checkout main -- .github/workflows/publish.yml
+                  git checkout main -- .github/workflows/test.yml
 
                   echo "Created branch: $BRANCH"
 
@@ -156,24 +161,6 @@ jobs:
 
                   # Apply codemods to clean upstream code
                   node codemods/apply.js
-
-            - name: Cherry Pick Configuration Changes
-              run: |
-                  # Get the list of configuration files we want to preserve from main
-                  # Add any files that should be preserved from your fork
-                  CONFIG_FILES=(
-                    ".github/workflows/sync-upstream-release.yml"
-                    "codemods/*"
-                    # Add other configuration files that should be preserved
-                  )
-
-                  # Attempt to cherry pick changes for each config file
-                  for file in "${CONFIG_FILES[@]}"; do
-                    if git show origin/main:$file > /dev/null 2>&1; then
-                      echo "Preserving changes from main for $file"
-                      git checkout origin/main -- "$file"
-                    fi
-                  done
 
             - name: Install Dependencies
               run: |
