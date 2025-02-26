@@ -21,6 +21,7 @@ async function applyTransform(rootDir) {
 		packageJson.author = {
 			name: "Goodloops Inc",
 		}
+		packageJson.scripts["publish:marketplace"] = "vsce publish"
 		packageJson.publisher = "goodloops"
 		packageJson.name = "goodloops-cline"
 		packageJson.displayName = "Goodloops Cline"

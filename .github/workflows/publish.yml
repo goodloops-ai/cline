@@ -108,7 +108,7 @@ jobs:
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
               run: |
                   # Required to generate the .vsix
-                  vsce package --out "cline-${{ steps.get_version.outputs.version }}.vsix"
+                  vsce package --out "goodloops-cline-${{ steps.get_version.outputs.version }}.vsix"
 
                   # Determine release type (from workflow_dispatch input or repository_dispatch payload)
                   RELEASE_TYPE="${{ github.event.inputs.release-type || github.event.client_payload.release-type }}"
