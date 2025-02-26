@@ -126,10 +126,6 @@ jobs:
                   git fetch upstream main
                   git checkout -b "$BRANCH" upstream/main
 
-                  # Save the current state as the base sync
-                  git add .
-                  git commit -m "Sync with upstream v${VERSION}"
-
                   # Now bring in just the codemods directory from our main
                   git checkout main -- codemods/
 
