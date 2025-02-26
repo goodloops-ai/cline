@@ -145,6 +145,8 @@ jobs:
                     git checkout -b "$BRANCH" "$TAG"
                   fi
 
+                  git merge main
+
                   echo "Created branch: $BRANCH"
 
             - name: Apply Codemods
