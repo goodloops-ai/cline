@@ -15,6 +15,10 @@ module.exports = function transform(content) {
 		packageJson.dependencies.jsdom = "^26.0.0"
 	}
 
+	if (!packageJson.devDependencies["@types/jsdom"]) {
+		packageJson.devDependencies["@types/jsdom"] = "^21.1.7"
+	}
+
 	// Sort dependencies alphabetically to maintain consistent ordering
 	const sortedDependencies = {}
 	Object.keys(packageJson.dependencies)
