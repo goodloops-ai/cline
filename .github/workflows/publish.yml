@@ -105,11 +105,20 @@ jobs:
             - name: Create Git Tag
               id: create_tag
               run: |
-                  VERSION=v${{ steps.get_version.outputs.version }}
-                  echo "tag=$VERSION" >> $GITHUB_OUTPUT
-                  echo "Tagging with $VERSION"
-                  git tag "$VERSION"
-                  git push origin "$VERSION"
+                  BASE_VERSION="${{ steps.get_version.outputs.version }}"
+
+                  # For fork versions, convert the + to - in the tag name since + can be problematic in git tags
+                  if [[ "$BASE_VERSION" == *"+fork"* ]]; then
+                    TAG_VERSION="${BASE_VERSION/+/-}"
+                  else
+                    TAG_VERSION="$BASE_VERSION"
+                  fi
+
+                  TAG="v$TAG_VERSION"
+                  echo "tag=$TAG" >> $GITHUB_OUTPUT
+                  echo "Tagging with $TAG"
+                  git tag "$TAG"
+                  git push origin "$TAG"
 
             - name: Package and Publish Extension
               env:
