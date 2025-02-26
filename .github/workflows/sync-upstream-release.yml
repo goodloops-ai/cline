@@ -13,6 +13,9 @@ on:
 
 permissions:
     contents: write
+    packages: write
+    checks: write
+    pull-requests: write
 
 jobs:
     check-upstream-releases:
@@ -21,7 +24,7 @@ jobs:
         outputs:
             new_version: ${{ steps.compare_tags.outputs.new_version }}
             upstream_tag: ${{ steps.get_upstream_tag.outputs.upstream_tag }}
-            
+
         steps:
             - name: Checkout Repository
               uses: actions/checkout@v4
@@ -86,6 +89,9 @@ jobs:
         needs: check-upstream-releases
         if: needs.check-upstream-releases.outputs.new_version == 'true' || github.event.inputs.tag != ''
         runs-on: ubuntu-latest
+        outputs:
+            branch: ${{ steps.commit.outputs.branch }}
+            upstream_tag: ${{ needs.check-upstream-releases.outputs.upstream_tag }}
 
         steps:
             - name: Checkout Repository
@@ -127,14 +133,16 @@ jobs:
                     git branch -D "$BRANCH"
                   fi
 
-                  # Create new branch from upstream tag
-                  git checkout -b $BRANCH tags/$TAG
-                  git merge main
-
-                  # If the tag doesn't exist as a branch, try checking out the tag directly
-                  if [ $? -ne 0 ]; then
-                    echo "Trying to checkout tag directly"
-                    git checkout -b "$BRANCH" "upstream/$TAG" || git checkout -b "$BRANCH" "$TAG"
+                  # Create new branch directly from upstream tag without merging main
+                  if git show-ref --verify --quiet "refs/tags/$TAG"; then
+                    echo "Creating branch from tag $TAG"
+                    git checkout -b $BRANCH tags/$TAG
+                  elif git show-ref --verify --quiet "refs/remotes/upstream/$TAG"; then
+                    echo "Creating branch from upstream/$TAG"
+                    git checkout -b "$BRANCH" "upstream/$TAG"
+                  else
+                    echo "Creating branch from $TAG"
+                    git checkout -b "$BRANCH" "$TAG"
                   fi
 
                   echo "Created branch: $BRANCH"
@@ -144,14 +152,33 @@ jobs:
                   # Ensure fs-extra is installed for the codemod script
                   npm install fs-extra ts-morph
 
-                  # Apply codemods
+                  # Apply codemods to clean upstream code
                   node codemods/apply.js
+
+            - name: Cherry Pick Configuration Changes
+              run: |
+                  # Get the list of configuration files we want to preserve from main
+                  # Add any files that should be preserved from your fork
+                  CONFIG_FILES=(
+                    ".github/workflows/sync-upstream-release.yml"
+                    "codemods/*"
+                    # Add other configuration files that should be preserved
+                  )
+
+                  # Attempt to cherry pick changes for each config file
+                  for file in "${CONFIG_FILES[@]}"; do
+                    if git show origin/main:$file > /dev/null 2>&1; then
+                      echo "Preserving changes from main for $file"
+                      git checkout origin/main -- "$file"
+                    fi
+                  done
 
             - name: Install Dependencies
               run: |
                   npm install
                   npm ci
                   npm run format:fix
+
             - name: Commit Changes
               id: commit
               run: |
@@ -166,3 +193,50 @@ jobs:
 
                   echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
                   echo "Changes committed and pushed to branch: $(git rev-parse --abbrev-ref HEAD)"
+
+    # Run tests on the synced code
+    test:
+        name: Run Tests
+        needs: sync-upstream-release
+        uses: ./.github/workflows/test.yml
+
+    # Create a PR for reference (not for merging)
+    create-pr:
+        name: Create Reference Pull Request
+        needs: [sync-upstream-release, test]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Create Pull Request
+              id: create-pr
+              uses: peter-evans/create-pull-request@v5
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: ${{ needs.sync-upstream-release.outputs.branch }}
+                  base: main
+                  title: "[DO NOT MERGE] Reference: Sync with upstream ${{ needs.sync-upstream-release.outputs.upstream_tag }}"
+                  body: |
+                      This PR is for reference only to show the changes from upstream ${{ needs.sync-upstream-release.outputs.upstream_tag }}.
+
+                      The changes have been automatically published from the sync branch.
+                      DO NOT MERGE THIS PR - it is only for tracking purposes.
+                  labels: sync-upstream,do-not-merge
+
+    # Trigger the publish workflow with the sync branch
+    publish:
+        name: Trigger Publish Workflow
+        needs: [sync-upstream-release, test, create-pr]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Trigger publish workflow
+              uses: peter-evans/repository-dispatch@v3
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  event-type: auto-publish
+                  client-payload: |
+                      {
+                        "release-type": "release",
+                        "branch": "${{ needs.sync-upstream-release.outputs.branch }}"
+                      }

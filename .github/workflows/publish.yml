@@ -11,6 +11,13 @@ on:
                 options:
                     - pre-release
                     - release
+            branch:
+                description: "Branch to publish from (default: main)"
+                required: false
+                default: "main"
+                type: string
+    repository_dispatch:
+        types: [auto-publish]
 
 permissions:
     contents: write
@@ -30,6 +37,9 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.branch || github.event.client_payload.branch || 'main' }}
+                  fetch-depth: 0
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -66,8 +76,22 @@ jobs:
             - name: Get Version
               id: get_version
               run: |
-                  VERSION=$(node -p "require('./package.json').version")
+                  # Get base version from package.json
+                  BASE_VERSION=$(node -p "require('./package.json').version")
+
+                  # If this is from a sync branch (repository_dispatch), add the fork suffix
+                  if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+                    VERSION="${BASE_VERSION}-fork.${GITHUB_SHA:0:7}"
+                  else
+                    VERSION="${BASE_VERSION}"
+                  fi
+
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+                  # Update package.json if version changed
+                  if [ "$VERSION" != "$BASE_VERSION" ]; then
+                    npm version $VERSION --no-git-tag-version
+                  fi
 
             - name: Create Git Tag
               id: create_tag
@@ -86,7 +110,10 @@ jobs:
                   # Required to generate the .vsix
                   vsce package --out "cline-${{ steps.get_version.outputs.version }}.vsix"
 
-                  if [ "${{ github.event.inputs.release-type }}" = "pre-release" ]; then
+                  # Determine release type (from workflow_dispatch input or repository_dispatch payload)
+                  RELEASE_TYPE="${{ github.event.inputs.release-type || github.event.client_payload.release-type }}"
+
+                  if [ "$RELEASE_TYPE" = "pre-release" ]; then
                     npm run publish:marketplace:prerelease
                     echo "Successfully published pre-release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
                   else
@@ -110,6 +137,6 @@ jobs:
                   files: "*.vsix"
                   # body: ${{ steps.changelog.outputs.content }}
                   generate_release_notes: true
-                  prerelease: ${{ github.event.inputs.release-type == 'pre-release' }}
+                  prerelease: ${{ github.event.inputs.release-type == 'pre-release' || github.event.client_payload.release-type == 'pre-release' }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
