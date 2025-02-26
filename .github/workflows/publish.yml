@@ -81,7 +81,7 @@ jobs:
                   # Get base version from package.json
                   BASE_VERSION=$(node -p "require('./package.json').version")
 
-                  # If this is from a sync branch (repository_dispatch), add the fork suffix
+                  # If this is from a sync branch (repository_dispatch), add counter to patch version
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
                     # Get counter from client payload if it exists
                     COUNTER="${{ github.event.client_payload.counter }}"
@@ -89,8 +89,11 @@ jobs:
                       COUNTER="0"
                     fi
                     
-                    # Use semver build metadata format (+) instead of pre-release (-)
-                    VERSION="${BASE_VERSION}+fork.${COUNTER}"
+                    # Split version into parts
+                    IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+                    
+                    # Append counter to patch version
+                    VERSION="${MAJOR}.${MINOR}.${PATCH}${COUNTER}"
                   else
                     VERSION="${BASE_VERSION}"
                   fi
@@ -99,22 +102,13 @@ jobs:
 
                   # Update package.json if version changed
                   if [ "$VERSION" != "$BASE_VERSION" ]; then
-                    npm version $VERSION --no-git-tag-version
+                    npm version "$VERSION" --no-git-tag-version
                   fi
 
             - name: Create Git Tag
               id: create_tag
               run: |
-                  BASE_VERSION="${{ steps.get_version.outputs.version }}"
-
-                  # For fork versions, convert the + to - in the tag name since + can be problematic in git tags
-                  if [[ "$BASE_VERSION" == *"+fork"* ]]; then
-                    TAG_VERSION="${BASE_VERSION/+/-}"
-                  else
-                    TAG_VERSION="$BASE_VERSION"
-                  fi
-
-                  TAG="v$TAG_VERSION"
+                  TAG="v${{ steps.get_version.outputs.version }}"
                   echo "tag=$TAG" >> $GITHUB_OUTPUT
                   echo "Tagging with $TAG"
                   git tag "$TAG"
