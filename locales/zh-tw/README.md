@@ -8,7 +8,7 @@
 <table>
 <tbody>
 <td align="center">
-<a href="https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" target="_blank"><strong>在 VS Marketplace 下載</strong></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=goodloops.goodloops-dev" target="_blank"><strong>在 VS Marketplace 下載</strong></a>
 </td>
 <td align="center">
 <a href="https://discord.gg/cline" target="_blank"><strong>Discord</strong></a>
@@ -20,7 +20,7 @@
 <a href="https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><strong>功能請求</strong></a>
 </td>
 <td align="center">
-<a href="https://cline.bot/join-us" target="_blank"><strong>我們正在招聘！</strong></a>
+<a href="https://goodloops.dev/join-us" target="_blank"><strong>我們正在招聘！</strong></a>
 </td>
 </tbody>
 </table>
@@ -135,7 +135,7 @@ Cline 所做的所有更改都會記錄在你的文件時間軸中，提供了�
 
 ## 貢獻
 
-要為項目做出貢獻，請從我們的 [貢獻指南](CONTRIBUTING.md) 開始，了解基礎知識。你還可以加入我們的 [Discord](https://discord.gg/cline) 在 `#contributors` 頻道與其他貢獻者聊天。如果你正在尋找全職工作，請查看我們在 [招聘頁面](https://cline.bot/join-us) 上的開放職位！
+要為項目做出貢獻，請從我們的 [貢獻指南](CONTRIBUTING.md) 開始，了解基礎知識。你還可以加入我們的 [Discord](https://discord.gg/cline) 在 `#contributors` 頻道與其他貢獻者聊天。如果你正在尋找全職工作，請查看我們在 [招聘頁面](https://goodloops.dev/join-us) 上的開放職位！
 
 <details>
 <summary>本地開發說明</summary>
