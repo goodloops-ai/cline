@@ -7,6 +7,7 @@ const transformPackageJson = require("./transforms/package-json")
 const transformExtension = require("./transforms/extension")
 const transformClineProvider = require("./transforms/cline-provider")
 const transformSystemPrompt = require("./transforms/system-prompt")
+const transformReadme = require("./transforms/readme")
 
 async function apply(rootDir) {
 	console.log("Applying fork codemod...")
@@ -54,6 +55,19 @@ async function applyTransforms(rootDir) {
 	const extensionFile = path.join(rootDir, "src/extension.ts")
 	const clineProviderFile = path.join(rootDir, "src/core/webview/ClineProvider.ts")
 	const systemPromptFile = path.join(rootDir, "src/core/prompts/system.ts")
+	const readmeFile = path.join(rootDir, "README.md")
+
+	// Also handle localized README files
+	const localesDir = path.join(rootDir, "locales")
+	const localeDirs = await fs.readdir(localesDir).catch(() => [])
+	const localeReadmeFiles = []
+
+	for (const localeDir of localeDirs) {
+		const localeReadmePath = path.join(localesDir, localeDir, "README.md")
+		if (await fs.pathExists(localeReadmePath)) {
+			localeReadmeFiles.push(localeReadmePath)
+		}
+	}
 
 	if (await fs.pathExists(packageJsonFile)) {
 		const content = await fs.readFile(packageJsonFile, "utf8")
@@ -81,6 +95,21 @@ async function applyTransforms(rootDir) {
 		const transformed = transformSystemPrompt(content)
 		await fs.writeFile(systemPromptFile, transformed)
 		console.log("Transformed: src/core/prompts/system.ts")
+	}
+
+	if (await fs.pathExists(readmeFile)) {
+		const content = await fs.readFile(readmeFile, "utf8")
+		const transformed = transformReadme(content)
+		await fs.writeFile(readmeFile, transformed)
+		console.log("Transformed: README.md")
+	}
+
+	// Transform all localized README files
+	for (const localeReadmePath of localeReadmeFiles) {
+		const content = await fs.readFile(localeReadmePath, "utf8")
+		const transformed = transformReadme(content)
+		await fs.writeFile(localeReadmePath, transformed)
+		console.log(`Transformed: ${path.relative(rootDir, localeReadmePath)}`)
 	}
 }
 
@@ -127,10 +156,16 @@ async function replaceInAllFiles(rootDir) {
 				.replace(/app\.cline\.bot/g, "app.goodloops.dev")
 				.replace(/cline\.bot/g, "goodloops.dev")
 				.replace(/Documents\/Cline\//g, "Documents/Goodloops/")
+				// Replace GitHub URLs
+				.replace(/github\.com\/cline\/cline/g, "github.com/goodloops/goodloops-dev")
+				.replace(/discord\.gg\/cline/g, "discord.gg/goodloops")
+				.replace(/reddit\.com\/r\/cline/g, "reddit.com/r/goodloops")
 				// Replace notification titles and text
 				.replace(/"Cline"/g, '"Goodloops Dev"')
 				// Replace HTTP headers
 				.replace(/"X-Title": "Cline"/g, '"X-Title": "Goodloops Dev"')
+				// Replace license information
+				.replace(/© 202[0-9] Cline Bot Inc\./g, "© 2025 Goodloops Inc. (forked from Cline)")
 
 			// Only write the file if changes were made
 			if (modified !== content) {

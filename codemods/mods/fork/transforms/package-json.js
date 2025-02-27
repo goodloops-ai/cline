@@ -13,6 +13,11 @@ module.exports = function transform(content) {
 		name: "Goodloops Inc.",
 	}
 
+	// Update description to indicate it's a fork
+	if (packageJson.description) {
+		packageJson.description = "A fork of Cline - " + packageJson.description
+	}
+
 	// Update repository URL if needed
 	if (packageJson.repository && packageJson.repository.url) {
 		packageJson.repository.url = packageJson.repository.url.replace("cline/cline", "goodloops/goodloops-dev")
