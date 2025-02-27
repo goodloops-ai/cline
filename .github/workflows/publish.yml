@@ -83,10 +83,15 @@ jobs:
 
                   # If this is from a sync branch (repository_dispatch), add counter to patch version
                   if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-                    # Get counter from client payload if it exists
-                    COUNTER="${{ github.event.client_payload.counter }}"
-                    if [ -z "$COUNTER" ]; then
-                      COUNTER="0"
+                    # Get counter from branch name if it exists
+                    BRANCH="${{ github.event.client_payload.branch }}"
+                    if [[ "$BRANCH" =~ sync-upstream-v[0-9]+\.[0-9]+\.[0-9]+([0-9]) ]]; then
+                      COUNTER="${BASH_REMATCH[1]}"
+                    else
+                      COUNTER="${{ github.event.client_payload.counter }}"
+                      if [ -z "$COUNTER" ]; then
+                        COUNTER="0"
+                      fi
                     fi
                     
                     # Split version into parts
@@ -94,6 +99,7 @@ jobs:
                     
                     # Append counter to patch version
                     VERSION="${MAJOR}.${MINOR}.${PATCH}${COUNTER}"
+                    echo "Using version $VERSION with counter $COUNTER from branch $BRANCH"
                   else
                     VERSION="${BASE_VERSION}"
                   fi
@@ -137,12 +143,14 @@ jobs:
                   # Determine release type (from workflow_dispatch input or repository_dispatch payload)
                   RELEASE_TYPE="${{ github.event.inputs.release-type || github.event.client_payload.release-type }}"
 
-                  if [ "${{ github.event.inputs.release-type }}" = "pre-release" ]; then
+                  if [ "$RELEASE_TYPE" = "pre-release" ]; then
+                    echo "Publishing pre-release version $VERSION..."
                     npm run publish:marketplace:prerelease
-                    echo "Successfully published pre-release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
+                    echo "Successfully published pre-release version $VERSION to VS Code Marketplace and Open VSX Registry"
                   else
+                    echo "Publishing release version $VERSION..."
                     npm run publish:marketplace
-                    echo "Successfully published release version ${{ steps.get_version.outputs.version }} to VS Code Marketplace and Open VSX Registry"
+                    echo "Successfully published release version $VERSION to VS Code Marketplace and Open VSX Registry"
                   fi
 
             # - name: Get Changelog Entry
