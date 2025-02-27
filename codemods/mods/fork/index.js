@@ -92,8 +92,10 @@ async function replaceInAllFiles(rootDir) {
 				.replace(/claude-dev-ActivityBar/g, "goodloops-dev-ActivityBar")
 				// Replace publisher references
 				.replace(/saoudrizwan\.claude-dev/g, "goodloops.goodloops-dev")
-				// Replace command prefixes (being careful not to replace partial matches)
-				.replace(/cline\./g, "goodloops.")
+				// Replace command prefixes (being careful not to replace internal class properties)
+				.replace(/command: "cline\./g, 'command: "goodloops.')
+				.replace(/commands\.registerCommand\("cline\./g, 'commands.registerCommand("goodloops.')
+				.replace(/command\.startsWith\("cline\./g, 'command.startsWith("goodloops.')
 				// Replace URLs and paths
 				.replace(/app\.cline\.bot/g, "app.goodloops.dev")
 				.replace(/cline\.bot/g, "goodloops.dev")

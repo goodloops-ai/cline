@@ -46,10 +46,12 @@ In addition to specific file transformations, the codemod performs a global sear
 
 - Extension identifiers
 - Publisher references
-- Command prefixes
+- Command prefixes (only in specific contexts like command registrations)
 - URLs and paths
 - Notification titles and text
 - HTTP headers
+
+The codemod is careful to avoid replacing internal class properties and method references, ensuring that the extension's code structure remains intact.
 
 ## Usage
 
