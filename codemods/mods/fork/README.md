@@ -63,11 +63,19 @@ To run manually:
 node apply.js [project-root]
 ```
 
-## Note on Assets
+## Assets
 
-This codemod does not modify or create new icon assets. You will need to create your own icon assets and place them in the appropriate directories:
+The codemod will copy any files from the `add-files` directory to the target project. This includes:
 
-- `assets/icons/icon.svg`
-- `assets/icons/icon.png`
-- `assets/icons/robot_panel_dark.png`
-- `assets/icons/robot_panel_light.png`
+- Custom icon assets in `add-files/assets/icons/`
+- Any other files you place in the `add-files` directory
+
+To customize the icon assets:
+
+1. Place your custom icon files in the `add-files/assets/icons/` directory:
+   - `icon.svg` - Vector version of the main icon
+   - `icon.png` - Main icon (128x128 pixels)
+   - `robot_panel_dark.png` - Icon for the sidebar in dark theme
+   - `robot_panel_light.png` - Icon for the sidebar in light theme
+
+2. Run the codemod, and these files will be automatically copied to the appropriate locations in the target project.

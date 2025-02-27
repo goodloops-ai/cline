@@ -18,7 +18,34 @@ async function apply(rootDir) {
 	// but avoid renaming classes/exports
 	await replaceInAllFiles(rootDir)
 
+	// Copy files from add-files directory to the target project
+	await copyFiles(rootDir)
+
 	console.log("Fork codemod applied successfully!")
+}
+
+async function copyFiles(rootDir) {
+	// Get the path to the add-files directory
+	const addFilesDir = path.join(__dirname, "add-files")
+
+	// Check if the add-files directory exists
+	if (await fs.pathExists(addFilesDir)) {
+		// Get all files in the add-files directory recursively
+		const files = await glob.glob("**/*", { cwd: addFilesDir, nodir: true })
+
+		// Copy each file to the target project
+		for (const file of files) {
+			const sourcePath = path.join(addFilesDir, file)
+			const targetPath = path.join(rootDir, file)
+
+			// Create the target directory if it doesn't exist
+			await fs.ensureDir(path.dirname(targetPath))
+
+			// Copy the file
+			await fs.copy(sourcePath, targetPath)
+			console.log(`Copied: ${file}`)
+		}
+	}
 }
 
 async function applyTransforms(rootDir) {
