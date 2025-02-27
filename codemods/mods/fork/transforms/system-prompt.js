@@ -6,7 +6,7 @@ module.exports = function transform(content) {
 	// Update branding references in the system prompt
 	let modified = content
 		// Update the introduction but keep class names
-		// .replace(/You are Cline,/g, "You are Goodloops Dev,")
+		.replace(/You are Cline,/g, "You are Goodloops Dev, a fork of Cline,")
 
 		// Update tool descriptions and examples
 		.replace(/\`cline\./g, "`goodloops.")
