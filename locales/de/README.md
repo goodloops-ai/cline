@@ -8,7 +8,7 @@
 <table>
 <tbody>
 <td align="center">
-<a href="https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" target="_blank"><strong>Im VS Marketplace herunterladen</strong></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=goodloops.goodloops-dev" target="_blank"><strong>Im VS Marketplace herunterladen</strong></a>
 </td>
 <td align="center">
 <a href="https://discord.gg/cline" target="_blank"><strong>Discord</strong></a>
@@ -20,7 +20,7 @@
 <a href="https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><strong>Feature Requests</strong></a>
 </td>
 <td align="center">
-<a href="https://cline.bot/join-us" target="_blank"><strong>Wir stellen ein!</strong></a>
+<a href="https://goodloops.dev/join-us" target="_blank"><strong>Wir stellen ein!</strong></a>
 </td>
 </tbody>
 </table>
@@ -135,7 +135,7 @@ Wenn Sie beispielsweise mit einem lokalen Webserver arbeiten, können Sie 'Nur A
 
 ## Beitrag leisten
 
-Um zum Projekt beizutragen, beginnen Sie mit unserem [Beitragsleitfaden](CONTRIBUTING.md), um die Grundlagen zu lernen. Sie können auch unserem [Discord](https://discord.gg/cline) beitreten, um im Kanal `#contributors` mit anderen Mitwirkenden zu chatten. Wenn Sie auf der Suche nach einer Vollzeitstelle sind, schauen Sie sich unsere offenen Stellen auf unserer [Karriereseite](https://cline.bot/join-us) an!
+Um zum Projekt beizutragen, beginnen Sie mit unserem [Beitragsleitfaden](CONTRIBUTING.md), um die Grundlagen zu lernen. Sie können auch unserem [Discord](https://discord.gg/cline) beitreten, um im Kanal `#contributors` mit anderen Mitwirkenden zu chatten. Wenn Sie auf der Suche nach einer Vollzeitstelle sind, schauen Sie sich unsere offenen Stellen auf unserer [Karriereseite](https://goodloops.dev/join-us) an!
 
 <details>
 <summary>Lokale Entwicklungsanweisungen</summary>
