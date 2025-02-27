@@ -8,7 +8,7 @@
 <table>
 <tbody>
 <td align="center">
-<a href="https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev" target="_blank"><strong>在 VS Marketplace 下载</strong></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=goodloops.goodloops-dev" target="_blank"><strong>在 VS Marketplace 下载</strong></a>
 </td>
 <td align="center">
 <a href="https://discord.gg/cline" target="_blank"><strong>Discord</strong></a>
@@ -20,7 +20,7 @@
 <a href="https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><strong>功能请求</strong></a>
 </td>
 <td align="center">
-<a href="https://cline.bot/join-us" target="_blank"><strong>我们正在招聘！</strong></a>
+<a href="https://goodloops.bot/join-us" target="_blank"><strong>我们正在招聘！</strong></a>
 </td>
 </tbody>
 </table>
@@ -135,14 +135,14 @@ Cline 所做的所有更改都会记录在你的文件时间轴中，提供了�
 
 ## 贡献
 
-要为项目做出贡献，请从我们的 [贡献指南](CONTRIBUTING.md) 开始，了解基础知识。你还可以加入我们的 [Discord](https://discord.gg/cline) 在 `#contributors` 频道与其他贡献者聊天。如果你正在寻找全职工作，请查看我们在 [招聘页面](https://cline.bot/join-us) 上的开放职位！
+要为项目做出贡献，请从我们的 [贡献指南](CONTRIBUTING.md) 开始，了解基础知识。你还可以加入我们的 [Discord](https://discord.gg/cline) 在 `#contributors` 频道与其他贡献者聊天。如果你正在寻找全职工作，请查看我们在 [招聘页面](https://goodloops.bot/join-us) 上的开放职位！
 
 <details>
 <summary>本地开发说明</summary>
 
 1. 克隆仓库 _(需要 [git-lfs](https://git-lfs.com/))_：
         ```bash
-        git clone https://github.com/cline/cline.git
+        git clone https://github.com/cline/goodloops.git
         ```
 2. 在 VSCode 中打开项目：
         ```bash

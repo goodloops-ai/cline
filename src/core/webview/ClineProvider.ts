@@ -105,8 +105,8 @@ export const GlobalFileNames = {
 }
 
 export class ClineProvider implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = "claude-dev.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
-	public static readonly tabPanelId = "claude-dev.TabPanelProvider"
+	public static readonly sideBarId = "goodloops-dev.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
+	public static readonly tabPanelId = "goodloops-dev.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
@@ -159,7 +159,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	async handleSignOut() {
 		try {
 			await this.authManager.signOut()
-			vscode.window.showInformationMessage("Successfully logged out of Cline")
+			vscode.window.showInformationMessage("Successfully logged out of Goodloops Dev")
 		} catch (error) {
 			vscode.window.showErrorMessage("Logout failed")
 		}
@@ -252,7 +252,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						text: JSON.stringify(await getTheme()),
 					})
 				}
-				if (e && e.affectsConfiguration("cline.mcpMarketplace.enabled")) {
+				if (e && e.affectsConfiguration("goodloops.mcpMarketplace.enabled")) {
 					// Update state when marketplace tab setting changes
 					await this.postStateToWebview()
 				}
@@ -389,7 +389,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https: data:; script-src 'nonce-${nonce}';">
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
 			<link href="${codiconsUri}" rel="stylesheet" />
-            <title>Cline</title>
+            <title>Goodloops Dev</title>
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -558,7 +558,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("requestyModelId", requestyModelId)
 							await this.updateGlobalState("togetherModelId", togetherModelId)
 							if (this.cline) {
-								this.cline.api = buildApiHandler(message.apiConfiguration)
+								this.goodloops.api = buildApiHandler(message.apiConfiguration)
 							}
 						}
 						await this.postStateToWebview()
@@ -570,7 +570,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						if (message.autoApprovalSettings) {
 							await this.updateGlobalState("autoApprovalSettings", message.autoApprovalSettings)
 							if (this.cline) {
-								this.cline.autoApprovalSettings = message.autoApprovalSettings
+								this.goodloops.autoApprovalSettings = message.autoApprovalSettings
 							}
 							await this.postStateToWebview()
 						}
@@ -579,7 +579,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						if (message.browserSettings) {
 							await this.updateGlobalState("browserSettings", message.browserSettings)
 							if (this.cline) {
-								this.cline.updateBrowserSettings(message.browserSettings)
+								this.goodloops.updateBrowserSettings(message.browserSettings)
 							}
 							await this.postStateToWebview()
 						}
@@ -591,7 +591,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					// case "relaunchChromeDebugMode":
 					// 	if (this.cline) {
-					// 		this.cline.browserSession.relaunchChromeDebugMode()
+					// 		this.goodloops.browserSession.relaunchChromeDebugMode()
 					// 	}
 					// 	break
 					case "askResponse":
@@ -717,7 +717,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const uriScheme = vscode.env.uriScheme
 
 						const authUrl = vscode.Uri.parse(
-							`https://app.cline.bot/auth?state=${encodeURIComponent(nonce)}&callback_url=${encodeURIComponent(`${uriScheme || "vscode"}://saoudrizwan.claude-dev/auth`)}`,
+							`https://app.goodloops.dev/auth?state=${encodeURIComponent(nonce)}&callback_url=${encodeURIComponent(`${uriScheme || "vscode"}://goodloops.goodloops-dev/auth`)}`,
 						)
 						vscode.env.openExternal(authUrl)
 						break
@@ -751,7 +751,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 							// 2. Enable MCP settings if disabled
 							// Enable MCP mode if disabled
-							const mcpConfig = vscode.workspace.getConfiguration("cline.mcp")
+							const mcpConfig = vscode.workspace.getConfiguration("goodloops.mcp")
 							if (mcpConfig.get<string>("mode") !== "full") {
 								await mcpConfig.update("mode", "full", true)
 							}
@@ -767,7 +767,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					}
 					// case "openMcpMarketplaceServerDetails": {
 					// 	if (message.text) {
-					// 		const response = await fetch(`https://api.cline.bot/v1/mcp/marketplace/item?mcpId=${message.mcpId}`)
+					// 		const response = await fetch(`https://api.goodloops.bot/v1/mcp/marketplace/item?mcpId=${message.mcpId}`)
 					// 		const details: McpDownloadResponse = await response.json()
 
 					// 		if (details.readmeContent) {
@@ -853,7 +853,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						const settingsFilter = message.text || ""
 						await vscode.commands.executeCommand(
 							"workbench.action.openSettings",
-							`@ext:saoudrizwan.claude-dev ${settingsFilter}`.trim(), // trim whitespace if no settings filter
+							`@ext:goodloops.goodloops-dev ${settingsFilter}`.trim(), // trim whitespace if no settings filter
 						)
 						break
 					}
@@ -958,7 +958,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 			if (this.cline) {
 				const { apiConfiguration: updatedApiConfiguration } = await this.getState()
-				this.cline.api = buildApiHandler(updatedApiConfiguration)
+				this.goodloops.api = buildApiHandler(updatedApiConfiguration)
 			}
 		}
 
@@ -966,9 +966,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.postStateToWebview()
 		// console.log("chatSettings", message.chatSettings)
 		if (this.cline) {
-			this.cline.updateChatSettings(chatSettings)
-			if (this.cline.isAwaitingPlanResponse && didSwitchToActMode) {
-				this.cline.didRespondToPlanAskBySwitchingMode = true
+			this.goodloops.updateChatSettings(chatSettings)
+			if (this.goodloops.isAwaitingPlanResponse && didSwitchToActMode) {
+				this.goodloops.didRespondToPlanAskBySwitchingMode = true
 				// this is necessary for the webview to update accordingly, but Cline instance will not send text back as feedback message
 				await this.postMessageToWebview({
 					type: "invoke",
@@ -996,7 +996,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// Currently ignoring errors to this endpoint, but after accounts we'll remove this anyways
 		try {
 			const response = await axios.post(
-				"https://app.cline.bot/api/mailing-list",
+				"https://app.goodloops.bot/api/mailing-list",
 				{
 					email: email,
 				},
@@ -1014,18 +1014,18 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async cancelTask() {
 		if (this.cline) {
-			const { historyItem } = await this.getTaskWithId(this.cline.taskId)
+			const { historyItem } = await this.getTaskWithId(this.goodloops.taskId)
 			try {
-				await this.cline.abortTask()
+				await this.goodloops.abortTask()
 			} catch (error) {
 				console.error("Failed to abort task", error)
 			}
 			await pWaitFor(
 				() =>
 					this.cline === undefined ||
-					this.cline.isStreaming === false ||
-					this.cline.didFinishAbortingStream ||
-					this.cline.isWaitingForFirstChunk, // if only first chunk is processed, then there's no need to wait for graceful abort (closes edits, browser, etc)
+					this.goodloops.isStreaming === false ||
+					this.goodloops.didFinishAbortingStream ||
+					this.goodloops.isWaitingForFirstChunk, // if only first chunk is processed, then there's no need to wait for graceful abort (closes edits, browser, etc)
 				{
 					timeout: 3_000,
 				},
@@ -1034,7 +1034,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			})
 			if (this.cline) {
 				// 'abandoned' will prevent this cline instance from affecting future cline instance gui. this may happen if its hanging on a streaming request
-				this.cline.abandoned = true
+				this.goodloops.abandoned = true
 			}
 			await this.initClineWithHistoryItem(historyItem) // clears task again, so we need to abortTask manually above
 			// await this.postStateToWebview() // new Cline instance will post state when it's ready. having this here sent an empty messages array to webview leading to virtuoso having to reload the entire list
@@ -1045,7 +1045,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		// User may be clearing the field
 		await this.updateGlobalState("customInstructions", instructions || undefined)
 		if (this.cline) {
-			this.cline.customInstructions = instructions || undefined
+			this.goodloops.customInstructions = instructions || undefined
 		}
 		await this.postStateToWebview()
 	}
@@ -1073,11 +1073,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async ensureMcpServersDirectoryExists(): Promise<string> {
 		const userDocumentsPath = await this.getDocumentsPath()
-		const mcpServersDir = path.join(userDocumentsPath, "Cline", "MCP")
+		const mcpServersDir = path.join(userDocumentsPath, "Goodloops Dev", "MCP")
 		try {
 			await fs.mkdir(mcpServersDir, { recursive: true })
 		} catch (error) {
-			return "~/Documents/Cline/MCP" // in case creating a directory in documents fails for whatever reason (e.g. permissions) - this is fine since this path is only ever used in the system prompt
+			return "~/Documents/Goodloops/MCP" // in case creating a directory in documents fails for whatever reason (e.g. permissions) - this is fine since this path is only ever used in the system prompt
 		}
 		return mcpServersDir
 	}
@@ -1157,10 +1157,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			// Then store the token securely
 			await this.storeSecret("authToken", token)
 			await this.postStateToWebview()
-			vscode.window.showInformationMessage("Successfully logged in to Cline")
+			vscode.window.showInformationMessage("Successfully logged in to Goodloops Dev")
 		} catch (error) {
 			console.error("Failed to handle auth callback:", error)
-			vscode.window.showErrorMessage("Failed to log in to Cline")
+			vscode.window.showErrorMessage("Failed to log in to Goodloops Dev")
 		}
 	}
 
@@ -1168,7 +1168,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	private async fetchMcpMarketplaceFromApi(silent: boolean = false): Promise<McpMarketplaceCatalog | undefined> {
 		try {
-			const response = await axios.get("https://api.cline.bot/v1/mcp/marketplace", {
+			const response = await axios.get("https://api.goodloops.bot/v1/mcp/marketplace", {
 				headers: {
 					"Content-Type": "application/json",
 				},
@@ -1260,7 +1260,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 			// Fetch server details from marketplace
 			const response = await axios.post<McpDownloadResponse>(
-				"https://api.cline.bot/v1/mcp/download",
+				"https://api.goodloops.bot/v1/mcp/download",
 				{ mcpId },
 				{
 					headers: { "Content-Type": "application/json" },
@@ -1379,7 +1379,7 @@ Here is the project's README to help you get started:\n\n${mcpDetails.readmeCont
 		await this.storeSecret("openRouterApiKey", apiKey)
 		await this.postStateToWebview()
 		if (this.cline) {
-			this.cline.api = buildApiHandler({
+			this.goodloops.api = buildApiHandler({
 				apiProvider: openrouter,
 				openRouterApiKey: apiKey,
 			})
@@ -1835,7 +1835,7 @@ Here is the project's README to help you get started:\n\n${mcpDetails.readmeCont
 		}
 
 		const o3MiniReasoningEffort = vscode.workspace
-			.getConfiguration("cline.modelSettings.o3Mini")
+			.getConfiguration("goodloops.modelSettings.o3Mini")
 			.get("reasoningEffort", "medium")
 
 		const mcpMarketplaceEnabled = vscode.workspace.getConfiguration("cline").get<boolean>("mcpMarketplace.enabled", true)
@@ -1983,7 +1983,7 @@ Here is the project's README to help you get started:\n\n${mcpDetails.readmeCont
 			await this.storeSecret(key, undefined)
 		}
 		if (this.cline) {
-			this.cline.abortTask()
+			this.goodloops.abortTask()
 			this.cline = undefined
 		}
 		vscode.window.showInformationMessage("State reset")
