@@ -78,7 +78,7 @@ When you request assistance:
 
 ## Children's Privacy
 
-We do not knowingly collect, maintain, or use personal information from children under 18 years of age, and no part of our Service(s) is directed to children. If you learn that a child has provided us with personal information in violation of this Privacy Policy, then you may alert us at support@cline.bot.
+We do not knowingly collect, maintain, or use personal information from children under 18 years of age, and no part of our Service(s) is directed to children. If you learn that a child has provided us with personal information in violation of this Privacy Policy, then you may alert us at support@goodloops.dev.
 
 ## Changes to Privacy Policy
 
@@ -111,6 +111,6 @@ If you choose to opt in to anonymous telemetry:
 
 For privacy-related questions or concerns:
 
--   Open an issue on our [GitHub repository](https://github.com/cline/cline)
--   Join our [Discord community](https://discord.gg/cline)
--   Email: support@cline.bot
+-   Open an issue on our [GitHub repository](https://github.com/goodloops/goodloops-dev)
+-   Join our [Discord community](https://discord.gg/goodloops)
+-   Email: support@goodloops.dev
