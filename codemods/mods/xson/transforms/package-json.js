@@ -34,8 +34,8 @@ module.exports = function transform(content) {
 		const properties = packageJson.contributes.configuration.properties || {}
 
 		// Add the useXsonParser configuration if it doesn't exist
-		if (!properties["cline.useXsonParser"]) {
-			properties["cline.useXsonParser"] = {
+		if (!properties["goodloops-dev.useXsonParser"]) {
+			properties["goodloops-dev.useXsonParser"] = {
 				type: "boolean",
 				default: false,
 				description:

@@ -64,7 +64,7 @@ module.exports = function transform(content) {
 
 					// Create a new block with useXsonParser declaration and return statement
 					const newBody = `{
-	const useXsonParser = vscode.workspace.getConfiguration("cline").get<boolean>("useXsonParser") ?? false
+	const useXsonParser = vscode.workspace.getConfiguration("goodloops-dev").get<boolean>("useXsonParser") ?? false
 
 	return ${templateLiteralText}
 }`
