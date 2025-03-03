@@ -1,10 +1,10 @@
 /**
- * Transform function for src/shared/api.ts
- * Adds claude-3.7-sonnet:thinking model with computer use and vision support
+ * Transform functions for adding claude-3.7-sonnet:thinking model support
  */
-module.exports = function transform(content) {
+
+function transformApi(content) {
 	// Check if the model already exists to avoid duplicate entries
-	if (content.includes('"claude-3.7-sonnet:thinking"')) {
+	if (content.includes('"claude-3-7-sonnet:thinking"')) {
 		console.log("claude-3.7-sonnet:thinking model already exists, skipping")
 		return content
 	}
@@ -37,4 +37,35 @@ module.exports = function transform(content) {
 
 	// Insert the new model at the start of the anthropicModels object
 	return content.slice(0, insertPosition) + newModelDef + content.slice(insertPosition)
+}
+
+function transformClineProvider(content) {
+	// Check if the model already exists in the switch statement
+	if (content.includes('"anthropic/claude-3.7-sonnet:thinking":')) {
+		console.log("claude-3.7-sonnet:thinking model already exists in ClineProvider, skipping")
+		return content
+	}
+
+	// Find the switch statement for setting model capabilities
+	const switchPattern = /switch \(rawModel\.id\) {[\s\S]*?case "anthropic\/claude-3\.7-sonnet":/
+	const match = content.match(switchPattern)
+
+	if (!match) {
+		console.warn("Could not find model switch statement in ClineProvider")
+		return content
+	}
+
+	// Position at the start of the first case
+	const insertPosition = match.index + match[0].length
+
+	// New case to insert
+	const newCase = `
+			case "anthropic/claude-3.7-sonnet:thinking":`
+
+	return content.slice(0, insertPosition) + newCase + content.slice(insertPosition)
+}
+
+module.exports = {
+	transformApi,
+	transformClineProvider,
 }
