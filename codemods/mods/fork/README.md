@@ -8,15 +8,15 @@ The codemod makes the following changes:
 
 ### Package Identity
 - Changes `name` from "claude-dev" to "goodloops-dev"
-- Changes `displayName` from "Cline" to "Goodloops Dev"
+- Changes `displayName` from "Goodloops Dev" to "Goodloops Dev"
 - Changes `publisher` from "saoudrizwan" to "goodloops"
 - Updates `author` information
 - Updates repository URL and homepage
 
 ### Extension Identifiers
-- Updates view container ID from "claude-dev-ActivityBar" to "goodloops-dev-ActivityBar"
-- Updates view provider ID from "claude-dev.SidebarProvider" to "goodloops-dev.SidebarProvider"
-- Updates tab panel ID from "claude-dev.TabPanelProvider" to "goodloops-dev.TabPanelProvider"
+- Updates view container ID from "goodloops-dev-ActivityBar" to "goodloops-dev-ActivityBar"
+- Updates view provider ID from "goodloops-dev.SidebarProvider" to "goodloops-dev.SidebarProvider"
+- Updates tab panel ID from "goodloops-dev.TabPanelProvider" to "goodloops-dev.TabPanelProvider"
 - Updates command prefixes from "cline." to "goodloops."
 - Updates configuration properties from "cline." to "goodloops."
 
@@ -24,7 +24,7 @@ The codemod makes the following changes:
 - Updates notification titles and messages
 - Updates log messages
 - Updates HTTP headers and URLs
-- Updates directory paths (e.g., "Documents/Cline/" to "Documents/Goodloops/")
+- Updates directory paths (e.g., "Documents/Goodloops/" to "Documents/Goodloops/")
 
 ### System Prompt
 - Updates branding references in the system prompt

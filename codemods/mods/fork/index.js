@@ -15,7 +15,7 @@ async function apply(rootDir) {
 	// Apply transforms
 	await applyTransforms(rootDir)
 
-	// Replace all occurrences of "claude-dev" with "goodloops-dev" and "Cline" with "Goodloops Dev" in all files
+	// Replace all occurrences of "claude-dev" with "goodloops-dev" and "Goodloops Dev" with "Goodloops Dev" in all files
 	// but avoid renaming classes/exports
 	await replaceInAllFiles(rootDir)
 
@@ -145,7 +145,7 @@ async function replaceInAllFiles(rootDir) {
 				// Replace extension identifiers
 				.replace(/claude-dev\.SidebarProvider/g, "goodloops-dev.SidebarProvider")
 				.replace(/claude-dev\.TabPanelProvider/g, "goodloops-dev.TabPanelProvider")
-				.replace(/claude-dev-ActivityBar/g, "goodloops-dev-ActivityBar")
+				.replace(/goodloops-dev-ActivityBar/g, "goodloops-dev-ActivityBar")
 				// Replace publisher references
 				.replace(/saoudrizwan\.claude-dev/g, "goodloops.goodloops-dev")
 				// Replace command prefixes (being careful not to replace internal class properties)
@@ -161,9 +161,9 @@ async function replaceInAllFiles(rootDir) {
 				.replace(/discord\.gg\/cline/g, "discord.gg/goodloops")
 				.replace(/reddit\.com\/r\/cline/g, "reddit.com/r/goodloops")
 				// Replace notification titles and text
-				.replace(/"Cline"/g, '"Goodloops Dev"')
+				.replace(/"Goodloops Dev"/g, '"Goodloops Dev"')
 				// Replace HTTP headers
-				.replace(/"X-Title": "Cline"/g, '"X-Title": "Goodloops Dev"')
+				.replace(/"X-Title": "Goodloops Dev"/g, '"X-Title": "Goodloops Dev"')
 				// Replace license information
 				.replace(/© 202[0-9] Cline Bot Inc\./g, "© 2025 Goodloops Inc. (forked from Cline)")
 

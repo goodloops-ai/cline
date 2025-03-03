@@ -13,7 +13,7 @@ module.exports = function transform(content) {
 
 	// Update output channel name
 	modified = modified.replace(
-		/vscode\.window\.createOutputChannel\("Cline"\)/g,
+		/vscode\.window\.createOutputChannel\("Goodloops Dev"\)/g,
 		'vscode.window.createOutputChannel("Goodloops Dev")',
 	)
 
@@ -25,7 +25,7 @@ module.exports = function transform(content) {
 
 	// Update panel creation
 	modified = modified.replace(
-		/vscode\.window\.createWebviewPanel\(ClineProvider\.tabPanelId, "Cline"/g,
+		/vscode\.window\.createWebviewPanel\(ClineProvider\.tabPanelId, "Goodloops Dev"/g,
 		'vscode.window.createWebviewPanel(ClineProvider.tabPanelId, "Goodloops Dev"',
 	)
 
