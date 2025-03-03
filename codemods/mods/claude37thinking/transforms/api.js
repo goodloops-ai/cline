@@ -23,7 +23,7 @@ module.exports = function transform(content) {
 
 	// New model definition to insert
 	const newModelDef = `
-	"claude-3.7-sonnet:thinking": {
+	"claude-3-7-sonnet:thinking": {
 		maxTokens: 8192,
 		contextWindow: 200_000,
 		supportsImages: true,
