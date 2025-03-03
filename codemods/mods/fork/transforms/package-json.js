@@ -73,6 +73,7 @@ module.exports = function transform(content) {
 				{
 					id: "goodloops-dev-ActivityBar",
 					title: "Goodloops Dev",
+					icon: "assets/icons/icon.svg",
 				},
 			]
 		}
