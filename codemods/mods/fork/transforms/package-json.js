@@ -68,6 +68,26 @@ module.exports = function transform(content) {
 			})
 		}
 
+		if (packageJson.contributes.viewsContainers) {
+			packageJson.contributes.viewsContainers.activitybar = [
+				{
+					id: "goodloops-dev-ActivityBar",
+					title: "Goodloops Dev",
+				},
+			]
+		}
+
+		if (packageJson.contributes.views) {
+			packageJson.contributes.views = {
+				"goodloops-dev-ActivityBar": [
+					{
+						type: "webview",
+						id: "goodloops-dev.SidebarProvider",
+						name: "",
+					},
+				],
+			}
+		}
 		// Update menus
 		if (packageJson.contributes.menus && packageJson.contributes.menus["view/title"]) {
 			packageJson.contributes.menus["view/title"].forEach((item) => {
