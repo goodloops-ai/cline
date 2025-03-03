@@ -54,7 +54,7 @@ Cline is your AI assistant that can:
 
 ## Available Tools
 
-For the most up-to-date implementation details, you can view the full source code in the [Cline repository](https://github.com/cline/cline/blob/main/src/core/Cline.ts).
+For the most up-to-date implementation details, you can view the full source code in the [Cline repository](https://github.com/goodloops/goodloops-dev/blob/main/src/core/Cline.ts).
 
 Cline has access to the following tools for various tasks:
 
@@ -132,6 +132,6 @@ Each tool has specific parameters and usage patterns. Here are some examples:
 
 ## Getting Help
 
--   [Join the Discord community](https://discord.gg/cline)
+-   [Join the Discord community](https://discord.gg/goodloops)
 -   Check the documentation
 -   Provide feedback to improve Cline
