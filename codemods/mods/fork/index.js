@@ -115,7 +115,16 @@ async function applyTransforms(rootDir) {
 
 async function replaceInAllFiles(rootDir) {
 	// Define patterns to match files we want to modify
-	const patterns = ["**/*.ts", "**/*.js", "**/*.json", "**/*.md", "!**/node_modules/**", "!**/dist/**", "!**/out/**"]
+	const patterns = [
+		"**/*.ts",
+		"**/*.js",
+		"**/*.json",
+		"**/*.md",
+		"!**/node_modules/**",
+		"!**/dist/**",
+		"!**/out/**",
+		"!**/codemods/**",
+	]
 
 	// Get all matching files
 	const files = await glob.glob(patterns, { cwd: rootDir, absolute: true })
@@ -145,7 +154,7 @@ async function replaceInAllFiles(rootDir) {
 				// Replace extension identifiers
 				.replace(/claude-dev\.SidebarProvider/g, "goodloops-dev.SidebarProvider")
 				.replace(/claude-dev\.TabPanelProvider/g, "goodloops-dev.TabPanelProvider")
-				.replace(/goodloops-dev-ActivityBar/g, "goodloops-dev-ActivityBar")
+				.replace(/claude-dev-ActivityBar/g, "goodloops-dev-ActivityBar")
 				// Replace publisher references
 				.replace(/saoudrizwan\.claude-dev/g, "goodloops.goodloops-dev")
 				// Replace command prefixes (being careful not to replace internal class properties)
@@ -161,9 +170,9 @@ async function replaceInAllFiles(rootDir) {
 				.replace(/discord\.gg\/cline/g, "discord.gg/goodloops")
 				.replace(/reddit\.com\/r\/cline/g, "reddit.com/r/goodloops")
 				// Replace notification titles and text
-				.replace(/"Goodloops Dev"/g, '"Goodloops Dev"')
+				.replace(/"Cline"/g, '"Goodloops Dev"')
 				// Replace HTTP headers
-				.replace(/"X-Title": "Goodloops Dev"/g, '"X-Title": "Goodloops Dev"')
+				.replace(/"X-Title": "Cline"/g, '"X-Title": "Goodloops Dev"')
 				// Replace license information
 				.replace(/© 202[0-9] Cline Bot Inc\./g, "© 2025 Goodloops Inc. (forked from Cline)")
 

@@ -23,7 +23,7 @@ module.exports = function transform(content) {
 		.replace(/"Cline is having/g, '"Goodloops Dev is having')
 
 		// Update HTTP headers
-		.replace(/"X-Title": "Goodloops Dev"/g, '"X-Title": "Goodloops Dev"')
+		.replace(/"X-Title": "Cline"/g, '"X-Title": "Goodloops Dev"')
 
 	// We're not renaming classes/exports as per user feedback
 	// .replace(/Cline <Language Model API>/g, "Goodloops Dev <Language Model API>")

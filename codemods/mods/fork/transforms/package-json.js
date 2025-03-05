@@ -33,7 +33,7 @@ module.exports = function transform(content) {
 		// Update viewsContainers
 		if (packageJson.contributes.viewsContainers && packageJson.contributes.viewsContainers.activitybar) {
 			packageJson.contributes.viewsContainers.activitybar.forEach((container) => {
-				if (container.id === "goodloops-dev-ActivityBar") {
+				if (container.id === "claude-dev-ActivityBar") {
 					container.id = "goodloops-dev-ActivityBar"
 					container.title = "Goodloops Dev"
 				}
@@ -42,14 +42,14 @@ module.exports = function transform(content) {
 
 		// Update views
 		if (packageJson.contributes.views) {
-			if (packageJson.contributes.views["goodloops-dev-ActivityBar"]) {
+			if (packageJson.contributes.views["claude-dev-ActivityBar"]) {
 				packageJson.contributes.views["goodloops-dev-ActivityBar"] =
-					packageJson.contributes.views["goodloops-dev-ActivityBar"]
-				delete packageJson.contributes.views["goodloops-dev-ActivityBar"]
+					packageJson.contributes.views["claude-dev-ActivityBar"]
+				delete packageJson.contributes.views["claude-dev-ActivityBar"]
 
 				// Update view IDs
 				packageJson.contributes.views["goodloops-dev-ActivityBar"].forEach((view) => {
-					if (view.id === "goodloops-dev.SidebarProvider") {
+					if (view.id === "claude-dev.SidebarProvider") {
 						view.id = "goodloops-dev.SidebarProvider"
 					}
 				})
@@ -59,10 +59,10 @@ module.exports = function transform(content) {
 		// Update commands
 		if (packageJson.contributes.commands) {
 			packageJson.contributes.commands.forEach((command) => {
-				if (command.command.startsWith("goodloops.")) {
+				if (command.command.startsWith("cline.")) {
 					command.command = command.command.replace("cline.", "goodloops.")
 				}
-				if (command.category === "Goodloops Dev") {
+				if (command.category === "Cline") {
 					command.category = "Goodloops Dev"
 				}
 			})
@@ -92,18 +92,18 @@ module.exports = function transform(content) {
 		// Update menus
 		if (packageJson.contributes.menus && packageJson.contributes.menus["view/title"]) {
 			packageJson.contributes.menus["view/title"].forEach((item) => {
-				if (item.command.startsWith("goodloops.")) {
+				if (item.command.startsWith("cline.")) {
 					item.command = item.command.replace("cline.", "goodloops.")
 				}
-				if (item.when && item.when.includes("goodloops-dev.SidebarProvider")) {
-					item.when = item.when.replace("goodloops-dev.SidebarProvider", "goodloops-dev.SidebarProvider")
+				if (item.when && item.when.includes("claude-dev.SidebarProvider")) {
+					item.when = item.when.replace("claude-dev.SidebarProvider", "goodloops-dev.SidebarProvider")
 				}
 			})
 		}
 
 		// Update configuration
 		if (packageJson.contributes.configuration) {
-			if (packageJson.contributes.configuration.title === "Goodloops Dev") {
+			if (packageJson.contributes.configuration.title === "Cline") {
 				packageJson.contributes.configuration.title = "Goodloops Dev"
 			}
 
