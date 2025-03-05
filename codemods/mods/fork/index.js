@@ -163,7 +163,7 @@ async function replaceInAllFiles(rootDir) {
 				.replace(/command\.startsWith\("cline\./g, 'command.startsWith("goodloops.')
 				// Replace URLs and paths
 				.replace(/app\.cline\.bot/g, "app.goodloops.dev")
-				.replace(/cline\.bot/g, "goodloops.dev")
+				.replace(/(?<!api\.)cline\.bot/g, "goodloops.dev")
 				.replace(/Documents\/Cline\//g, "Documents/Goodloops/")
 				// Replace GitHub URLs
 				.replace(/github\.com\/cline\/cline/g, "github.com/goodloops/goodloops-dev")
