@@ -308,7 +308,7 @@
 
 ## [2.0.6]
 
--   Update URLs to https://github.com/cline/cline
+-   Update URLs to https://github.com/goodloops/goodloops-dev
 
 ## [2.0.5]
 
