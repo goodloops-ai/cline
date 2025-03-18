@@ -6,6 +6,7 @@ import getFolderSize from "get-folder-size"
 import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
+import { fromXSON } from "../utils/xson"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { ApiHandler, buildApiHandler } from "../api"
@@ -1346,6 +1347,26 @@ export class Cline {
 			)
 		}
 
+		if (mcpHub) {
+			const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "xstate" && !conn.server.disabled)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					const xstateSystemPrompt = await mcpHub.readResource("xstate", "xstate://systemprompt")
+					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
+						const xstatePromptText = xstateSystemPrompt.contents
+							.map((content) => content.text)
+							.filter(Boolean)
+							.join("\n\n")
+						if (xstatePromptText) {
+							systemPrompt += "\n\n" + xstatePromptText
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate system prompt:", error)
+				}
+			}
+		}
+
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
 			const previousRequest = this.clineMessages[previousApiReqIndex]
@@ -2559,8 +2580,10 @@ export class Cline {
 								// }
 								let parsedArguments: Record<string, unknown> | undefined
 								if (mcp_arguments) {
+									const useXsonParser =
+										vscode.workspace.getConfiguration("goodloops").get<boolean>("useXsonParser") ?? false
 									try {
-										parsedArguments = JSON.parse(mcp_arguments)
+										parsedArguments = useXsonParser ? fromXSON(mcp_arguments) : JSON.parse(mcp_arguments)
 									} catch (error) {
 										this.consecutiveMistakeCount++
 										await this.say(

@@ -11,6 +11,7 @@ import chokidar, { FSWatcher } from "chokidar"
 import delay from "delay"
 import deepEqual from "fast-deep-equal"
 import * as fs from "fs/promises"
+import * as os from "os"
 import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
@@ -153,7 +154,7 @@ export class McpHub {
 			// Each MCP server requires its own transport connection and has unique capabilities, configurations, and error handling. Having separate clients also allows proper scoping of resources/tools and independent server management like reconnection.
 			const client = new Client(
 				{
-					name: "Cline",
+					name: "Goodloops Dev",
 					version: this.providerRef.deref()?.context.extension?.packageJSON?.version ?? "1.0.0",
 				},
 				{
@@ -161,12 +162,15 @@ export class McpHub {
 				},
 			)
 
+			const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(os.homedir(), "Desktop")
+
 			const transport = new StdioClientTransport({
 				command: config.command,
 				args: config.args,
 				env: {
 					...config.env,
 					...(process.env.PATH ? { PATH: process.env.PATH } : {}),
+					WORKSPACE_DIR: cwd,
 					// ...(process.env.NODE_PATH ? { NODE_PATH: process.env.NODE_PATH } : {}),
 				},
 				stderr: "pipe", // necessary for stderr to be available
