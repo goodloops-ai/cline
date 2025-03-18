@@ -15,15 +15,15 @@ async function apply(rootDir) {
 
 async function applyTransforms(rootDir) {
 	// Apply transform to system.ts file
-	const systemTsFile = path.join(rootDir, "src/core/prompts/system.ts")
+	const systemTsFile = path.join(rootDir, "src/core/Cline.ts")
 
 	if (await fs.pathExists(systemTsFile)) {
 		const content = await fs.readFile(systemTsFile, "utf8")
 		const transformed = transformSystemTs(content)
 		await fs.writeFile(systemTsFile, transformed)
-		console.log("Transformed: src/core/prompts/system.ts")
+		console.log("Transformed: src/core/Cline.ts")
 	} else {
-		console.error("Could not find src/core/prompts/system.ts")
+		console.error("Could not find src/core/Cline.ts")
 	}
 }
 

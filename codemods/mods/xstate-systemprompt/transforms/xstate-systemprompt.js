@@ -10,7 +10,7 @@ module.exports = function transform(content) {
 	}
 
 	// Define the pattern to match - find the block that contains systemPrompt += addUserInstructions
-	const addUserInstructionsRegex = /(systemPrompt \+= addUserInstructions\([^)]*\)[;\s]*)/
+	const addUserInstructionsRegex = /(systemPrompt \+= addUserInstructions\([^)]*\)[;\s]*\})/
 
 	// Replace with the original code plus our XState systemprompt integration code
 	const modifiedContent = content.replace(addUserInstructionsRegex, (match) => {
