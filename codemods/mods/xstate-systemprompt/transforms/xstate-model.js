@@ -15,46 +15,45 @@ module.exports = function transform(content) {
 	const modifiedContent = content.replace(attemptApiRequestRegex, (match) => {
 		return `${match}
 
-		// Fetch model dynamically from xstate MCP server
-		if (mcpHub) {
-			const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "xstate" && !conn.server.disabled)
-			if (xstateServer && xstateServer.server.status === "connected") {
-				try {
-					// Fetch model from xstate MCP server
-					const xstateModelResponse = await mcpHub.readResource("xstate", "xstate://model-card")
-					if (xstateModelResponse && xstateModelResponse.contents && xstateModelResponse.contents.length > 0) {
-						const modelId = xstateModelResponse.contents
-							.map((content) => content.text)
-							.filter(Boolean)[0]
-						
-						if (modelId) {
-                           const provider = this.providerRef.deref();
-                           if (provider) {
-							// Update API configuration with new model
-							const { apiConfiguration } = await provider.getState()
-                            const updatedApiConfiguration = {
-                                ...apiConfiguration,
-                                apiModelId: modelId,
-                                openRouterModelId: modelId,
-                                openAiModelId: modelId,
-                                ollamaModelId: modelId,
-                                anthropicModelId: modelId,
-                                geminiModelId: modelId,
-                                vertexModelId: modelId,
-                                
-                            }
-							
-                            await provider.updateApiConfiguration(updatedApiConfiguration)
-                            await provider.postStateToWebview()
+		
+        if (mcpHub) {
+            const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "xstate" && !conn.server.disabled)
+            if (xstateServer && xstateServer.server.status === "connected") {
+                try {
+                    // Fetch model from xstate MCP server
+                    const xstateModelResponse = await mcpHub.readResource("xstate", "xstate://model-card")
+                    if (xstateModelResponse && xstateModelResponse.contents && xstateModelResponse.contents.length > 0) {
+                        const modelId = xstateModelResponse.contents.map((content) => content.text).filter(Boolean)[0]
 
-							console.log("Using model from xstate MCP server:", modelId);
-						}
-					}
-				} catch (error) {
-					console.error("Failed to access xstate model:", error)
-				}
-			}
-		}
+                        if (modelId) {
+                            const provider = this.providerRef.deref()
+                            if (provider) {
+                                // Update API configuration with new model
+                                const { apiConfiguration } = await provider.getState()
+                                const updatedApiConfiguration = {
+                                    ...apiConfiguration,
+                                    apiModelId: modelId,
+                                    openRouterModelId: modelId,
+                                    openAiModelId: modelId,
+                                    ollamaModelId: modelId,
+                                    anthropicModelId: modelId,
+                                    geminiModelId: modelId,
+                                    vertexModelId: modelId,
+                                }
+
+                                await provider.updateApiConfiguration(updatedApiConfiguration)
+                                await provider.postStateToWebview()
+
+                                console.log("Using model from xstate MCP server:", modelId)
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to access xstate model:", error)
+                }
+            }
+        }
+
 `
 	})
 
