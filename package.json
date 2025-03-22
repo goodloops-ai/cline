@@ -1,7 +1,7 @@
 {
-	"name": "claude-dev",
-	"displayName": "Cline",
-	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
+	"name": "goodloops-dev",
+	"displayName": "Goodloops Dev",
+	"description": "A fork of Cline - Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
 	"version": "3.7.1",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
@@ -12,15 +12,15 @@
 		"vscode": "^1.84.0"
 	},
 	"author": {
-		"name": "Cline Bot Inc."
+		"name": "Goodloops Inc."
 	},
 	"license": "Apache-2.0",
-	"publisher": "saoudrizwan",
+	"publisher": "goodloops",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cline/cline"
+		"url": "https://github.com/goodloops/goodloops-dev"
 	},
-	"homepage": "https://cline.bot",
+	"homepage": "https://goodloops.dev",
 	"categories": [
 		"AI",
 		"Chat",
@@ -49,86 +49,86 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "claude-dev-ActivityBar",
-					"title": "Cline",
+					"id": "goodloops-dev-ActivityBar",
+					"title": "Goodloops Dev",
 					"icon": "assets/icons/icon.svg"
 				}
 			]
 		},
 		"views": {
-			"claude-dev-ActivityBar": [
+			"goodloops-dev-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "claude-dev.SidebarProvider",
+					"id": "goodloops-dev.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "cline.plusButtonClicked",
+				"command": "goodloops.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "cline.mcpButtonClicked",
+				"command": "goodloops.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(extensions)"
 			},
 			{
-				"command": "cline.historyButtonClicked",
+				"command": "goodloops.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "cline.popoutButtonClicked",
+				"command": "goodloops.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "cline.settingsButtonClicked",
+				"command": "goodloops.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "cline.openInNewTab",
+				"command": "goodloops.openInNewTab",
 				"title": "Open In New Tab",
-				"category": "Cline"
+				"category": "Goodloops Dev"
 			}
 		],
 		"menus": {
 			"view/title": [
 				{
-					"command": "cline.plusButtonClicked",
+					"command": "goodloops.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == goodloops-dev.SidebarProvider"
 				},
 				{
-					"command": "cline.mcpButtonClicked",
+					"command": "goodloops.mcpButtonClicked",
 					"group": "navigation@2",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == goodloops-dev.SidebarProvider"
 				},
 				{
-					"command": "cline.historyButtonClicked",
+					"command": "goodloops.historyButtonClicked",
 					"group": "navigation@3",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == goodloops-dev.SidebarProvider"
 				},
 				{
-					"command": "cline.popoutButtonClicked",
+					"command": "goodloops.popoutButtonClicked",
 					"group": "navigation@4",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == goodloops-dev.SidebarProvider"
 				},
 				{
-					"command": "cline.settingsButtonClicked",
+					"command": "goodloops.settingsButtonClicked",
 					"group": "navigation@5",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == goodloops-dev.SidebarProvider"
 				}
 			]
 		},
 		"configuration": {
-			"title": "Cline",
+			"title": "Goodloops Dev",
 			"properties": {
-				"cline.vsCodeLmModelSelector": {
+				"goodloops.vsCodeLmModelSelector": {
 					"type": "object",
 					"properties": {
 						"vendor": {
@@ -142,7 +142,7 @@
 					},
 					"description": "Settings for VSCode Language Model API"
 				},
-				"cline.mcp.mode": {
+				"goodloops.mcp.mode": {
 					"type": "string",
 					"enum": [
 						"full",
@@ -157,17 +157,17 @@
 					"default": "full",
 					"description": "Controls MCP inclusion in prompts, reduces token usage if you only need access to certain functionality."
 				},
-				"cline.enableCheckpoints": {
+				"goodloops.enableCheckpoints": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enables extension to save checkpoints of workspace throughout the task. Uses git under the hood which may not work well with large workspaces."
 				},
-				"cline.disableBrowserTool": {
+				"goodloops.disableBrowserTool": {
 					"type": "boolean",
 					"default": false,
 					"description": "Disables extension from spawning browser session."
 				},
-				"cline.modelSettings.o3Mini.reasoningEffort": {
+				"goodloops.modelSettings.o3Mini.reasoningEffort": {
 					"type": "string",
 					"enum": [
 						"low",
@@ -177,12 +177,12 @@
 					"default": "medium",
 					"description": "Controls the reasoning effort when using the o3-mini model. Higher values may result in more thorough but slower responses."
 				},
-				"cline.chromeExecutablePath": {
+				"goodloops.chromeExecutablePath": {
 					"type": "string",
 					"default": null,
 					"description": "Path to Chrome executable for browser use functionality. If not set, the extension will attempt to find or download it automatically."
 				},
-				"cline.preferredLanguage": {
+				"goodloops.preferredLanguage": {
 					"type": "string",
 					"enum": [
 						"English",
@@ -207,15 +207,20 @@
 					"default": "English",
 					"description": "The language that Cline should use for communication."
 				},
-				"cline.mcpMarketplace.enabled": {
+				"goodloops.mcpMarketplace.enabled": {
 					"type": "boolean",
 					"default": true,
 					"description": "Controls whether the MCP Marketplace is enabled."
 				},
-				"cline.conversationTelemetry": {
+				"goodloops.conversationTelemetry": {
 					"type": "boolean",
 					"default": false,
 					"description": "Share message data,  code, and more extensive telemetry. This data may be used to improve prompts used in Cline, train models, and understand failure states more accurately."
+				},
+				"goodloops.useXsonParser": {
+					"type": "boolean",
+					"default": false,
+					"description": "Use XSON format for MCP tool arguments instead of JSON. XSON is an XML-based format that handles multiline text and special characters better."
 				}
 			}
 		}
@@ -266,7 +271,8 @@
 		"prettier": "^3.3.3",
 		"should": "^13.2.3",
 		"sinon": "^19.0.2",
-		"typescript": "^5.4.5"
+		"typescript": "^5.4.5",
+		"@types/jsdom": "^21.1.7"
 	},
 	"dependencies": {
 		"@anthropic-ai/bedrock-sdk": "^0.12.4",
@@ -298,10 +304,12 @@
 		"execa": "^9.5.2",
 		"fast-deep-equal": "^3.1.3",
 		"firebase": "^11.2.0",
+		"fs-extra": "^11.3.0",
 		"get-folder-size": "^5.0.0",
 		"globby": "^14.0.2",
 		"ignore": "^7.0.3",
 		"isbinaryfile": "^5.0.2",
+		"jsdom": "^26.0.0",
 		"mammoth": "^1.8.0",
 		"monaco-vscode-textmate-theme-converter": "^0.1.7",
 		"ollama": "^0.5.13",
@@ -318,8 +326,10 @@
 		"simple-git": "^3.27.0",
 		"strip-ansi": "^7.1.0",
 		"tree-sitter-wasms": "^0.1.11",
+		"ts-morph": "^25.0.1",
 		"turndown": "^7.2.0",
 		"web-tree-sitter": "^0.22.6",
+		"xmlbuilder2": "^3.1.1",
 		"zod": "^3.24.2"
 	}
 }
