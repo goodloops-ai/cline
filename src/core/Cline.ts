@@ -6,6 +6,7 @@ import getFolderSize from "get-folder-size"
 import os from "os"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
+import { fromXSON } from "../utils/xson"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { ApiHandler, buildApiHandler } from "../api"
@@ -1282,6 +1283,44 @@ export class Cline {
 			throw new Error("MCP hub not available")
 		}
 
+		if (mcpHub) {
+			const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "xstate" && !conn.server.disabled)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					// Fetch model from xstate MCP server
+					const xstateModelResponse = await mcpHub.readResource("xstate", "xstate://model-card")
+					if (xstateModelResponse && xstateModelResponse.contents && xstateModelResponse.contents.length > 0) {
+						const modelId = xstateModelResponse.contents.map((content) => content.text).filter(Boolean)[0]
+
+						if (modelId) {
+							const provider = this.providerRef.deref()
+							if (provider) {
+								// Update API configuration with new model
+								const { apiConfiguration } = await provider.getState()
+								const updatedApiConfiguration = {
+									...apiConfiguration,
+									apiModelId: modelId,
+									openRouterModelId: modelId,
+									openAiModelId: modelId,
+									ollamaModelId: modelId,
+									anthropicModelId: modelId,
+									geminiModelId: modelId,
+									vertexModelId: modelId,
+								}
+
+								await provider.updateApiConfiguration(updatedApiConfiguration)
+								await provider.postStateToWebview()
+
+								console.log("Using model from xstate MCP server:", modelId)
+							}
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate model:", error)
+				}
+			}
+		}
+
 		const disableBrowserTool = vscode.workspace.getConfiguration("cline").get<boolean>("disableBrowserTool") ?? false
 		const modelSupportsComputerUse = this.api.getModel().info.supportsComputerUse ?? false
 
@@ -1349,6 +1388,26 @@ export class Cline {
 				clineIgnoreInstructions,
 				preferredLanguageInstructions,
 			)
+		}
+
+		if (mcpHub) {
+			const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "xstate" && !conn.server.disabled)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					const xstateSystemPrompt = await mcpHub.readResource("xstate", "xstate://systemprompt")
+					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
+						const xstatePromptText = xstateSystemPrompt.contents
+							.map((content) => content.text)
+							.filter(Boolean)
+							.join("\n\n")
+						if (xstatePromptText) {
+							systemPrompt += "\n\n" + xstatePromptText
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate system prompt:", error)
+				}
+			}
 		}
 
 		// Capture system prompt for telemetry,
@@ -2610,8 +2669,10 @@ export class Cline {
 								// }
 								let parsedArguments: Record<string, unknown> | undefined
 								if (mcp_arguments) {
+									const useXsonParser =
+										vscode.workspace.getConfiguration("goodloops").get<boolean>("useXsonParser") ?? false
 									try {
-										parsedArguments = JSON.parse(mcp_arguments)
+										parsedArguments = useXsonParser ? fromXSON(mcp_arguments) : JSON.parse(mcp_arguments)
 									} catch (error) {
 										this.consecutiveMistakeCount++
 										await this.say(
