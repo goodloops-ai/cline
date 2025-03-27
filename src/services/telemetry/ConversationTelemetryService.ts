@@ -28,10 +28,10 @@ Cline Telemetry (currently only available in DEV builds)
 
 Advanced Setting to opt-in to LLM observability, allowing you to share message data, code, and more extensive telemetry to help improve prompts used in Cline, train our models, and understand failure states more accurately.
 
-"cline.conversationTelemetry": {
+"goodloops.conversationTelemetry": {
 	"type": "boolean",
 	"default": false,
-	"markdownDescription": "Share message data, code, and more extensive telemetry. This data may be used to improve prompts used in Cline, train models, and understand failure states more accurately. [Learn more](https://docs.cline.bot/more-info/llm-observability)"
+	"markdownDescription": "Share message data, code, and more extensive telemetry. This data may be used to improve prompts used in Cline, train models, and understand failure states more accurately. [Learn more](https://docs.goodloops.dev/more-info/llm-observability)"
 }
  */
 
@@ -63,7 +63,7 @@ export class ConversationTelemetryService {
 
 		// User has to manually opt in to conversation telemetry in Advanced Settings
 		const isConversationTelemetryEnabled =
-			vscode.workspace.getConfiguration("cline").get<boolean>("conversationTelemetry") ?? false
+			vscode.workspace.getConfiguration("goodloops").get<boolean>("conversationTelemetry") ?? false
 
 		// Currently only enabled in dev environment
 		const isDevEnvironment = !!IS_DEV
