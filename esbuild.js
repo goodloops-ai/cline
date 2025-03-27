@@ -1,4 +1,5 @@
 const esbuild = require("esbuild")
+const jsdomPatch = require("./esbuild-jsdom-patch")
 const fs = require("fs")
 const path = require("path")
 
@@ -69,6 +70,7 @@ const extensionConfig = {
 	sourcemap: !production,
 	logLevel: "silent",
 	plugins: [
+		jsdomPatch,
 		copyWasmFiles,
 		/* add to the end of plugins array */
 		esbuildProblemMatcherPlugin,
