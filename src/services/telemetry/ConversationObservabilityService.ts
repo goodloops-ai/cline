@@ -29,7 +29,7 @@ Advanced Setting to opt-in to LLM observability, allowing you to share message d
 "cline.conversationObservability": {
 	"type": "boolean",
 	"default": false,
-	"markdownDescription": "Share message data, code, and more extensive telemetry. This data may be used to improve prompts used in Cline, train models, and understand failure states more accurately. [Learn more](https://docs.cline.bot/more-info/llm-observability)"
+	"markdownDescription": "Share message data, code, and more extensive telemetry. This data may be used to improve prompts used in Cline, train models, and understand failure states more accurately. [Learn more](https://docs.goodloops.dev/more-info/llm-observability)"
 }
  */
 
