@@ -11,6 +11,7 @@ import chokidar, { FSWatcher } from "chokidar"
 import { setTimeout as setTimeoutPromise } from "node:timers/promises"
 import deepEqual from "fast-deep-equal"
 import * as fs from "fs/promises"
+import * as os from "os"
 import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
@@ -182,6 +183,8 @@ export class McpHub {
 		}
 	}
 
+	private cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(os.homedir(), "Desktop")
+
 	private async connectToServer(
 		name: string,
 		config: z.infer<typeof StdioConfigSchema> | z.infer<typeof SseConfigSchema>,
@@ -212,6 +215,7 @@ export class McpHub {
 					env: {
 						...config.env,
 						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
+						WORKSPACE_DIR: this.cwd,
 						// ...(process.env.NODE_PATH ? { NODE_PATH: process.env.NODE_PATH } : {}),
 					},
 					stderr: "pipe", // necessary for stderr to be available
