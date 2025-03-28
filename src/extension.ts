@@ -2,10 +2,15 @@
 // Import the module and reference it with the alias vscode in your code below
 import { setTimeout as setTimeoutPromise } from "node:timers/promises"
 import * as vscode from "vscode"
+import * as path from "path"
+import { promises as fs } from "fs"
 import { ClineProvider } from "./core/webview/ClineProvider"
 import { Logger } from "./services/logging/Logger"
 import { createClineAPI } from "./exports"
-import "./utils/path" // necessary to have access to String.prototype.toPosix
+import "./utils/path"
+import { bundledPlugins } from "./bundledPlugins"
+import simpleGit from "simple-git"
+import { exec } from "child_process" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import assert from "node:assert"
 import { telemetryService } from "./services/telemetry/TelemetryService"
@@ -23,12 +28,94 @@ let outputChannel: vscode.OutputChannel
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
+
+async function setupBundledPlugins(context: vscode.ExtensionContext) {
+	let pluginsDir = ""
+	let mcpConfigPath = ""
+	try {
+		pluginsDir = path.join(context.globalStorageUri.fsPath, "plugins")
+		await fs.mkdir(pluginsDir, { recursive: true })
+
+		// Setup git
+		const git = simpleGit()
+
+		// Clone/update plugins
+		for (const plugin of bundledPlugins) {
+			const pluginPath = path.join(pluginsDir, plugin.name)
+			const pluginExists = await fs
+				.stat(pluginPath)
+				.then(() => true)
+				.catch(() => false)
+
+			try {
+				if (!pluginExists) {
+					// Clone the plugin repository
+					await git.clone(plugin.githubUrl, pluginPath)
+					Logger.log(`Cloned plugin: ${plugin.name}`)
+				} else {
+					// Update existing plugin repository
+					await git.cwd(pluginPath).pull("origin", "main")
+					Logger.log(`Updated plugin: ${plugin.name}`)
+				}
+
+				// Run npm install
+				await new Promise<void>((resolve, reject) => {
+					exec("npm install", { cwd: pluginPath }, (error) => {
+						if (error) {
+							const msg = `Error installing dependencies for ${plugin.name}: ${error}`
+							Logger.log(msg)
+							vscode.window.showErrorMessage(msg)
+							reject(error)
+						} else {
+							Logger.log(`Installed dependencies for ${plugin.name}`)
+							resolve()
+						}
+					})
+				})
+			} catch (err) {
+				const msg = `Error setting up plugin ${plugin.name}: ${err}`
+				Logger.log(msg)
+				vscode.window.showErrorMessage(msg)
+			}
+		}
+
+		// Configure MCP settings
+		mcpConfigPath = path.join(context.globalStorageUri.fsPath, "cline_mcp_settings.json")
+		let mcpConfig: any = { mcpServers: {} }
+
+		try {
+			const existingConfig = await fs.readFile(mcpConfigPath, "utf8")
+			mcpConfig = JSON.parse(existingConfig)
+		} catch {
+			// File doesn't exist, will create it
+		}
+
+		// Add bundled plugins to MCP config
+		for (const plugin of bundledPlugins) {
+			mcpConfig.mcpServers[plugin.name] = {
+				command: plugin.command,
+				args: [path.join(pluginsDir, plugin.name, plugin.entrypoint)],
+				disabled: false,
+				autoApprove: [],
+			}
+		}
+
+		// Write updated MCP config
+		await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2), "utf8")
+	} catch (err) {
+		Logger.log(`Error setting up bundled plugins: ${err}`)
+		vscode.window.showErrorMessage(`Error setting up bundled plugins: ${err} ${pluginsDir} ${mcpConfigPath}`)
+	}
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	outputChannel = vscode.window.createOutputChannel("Cline")
 	context.subscriptions.push(outputChannel)
 
 	Logger.initialize(outputChannel)
-	Logger.log("Cline extension activated")
+	Logger.log("Goodloops Dev extension activated")
+
+	setupBundledPlugins(context)
 
 	const sidebarProvider = new ClineProvider(context, outputChannel)
 
@@ -41,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
+		vscode.commands.registerCommand("goodloops-dev.plusButtonClicked", async () => {
 			Logger.log("Plus button Clicked")
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
@@ -53,7 +140,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.mcpButtonClicked", () => {
+		vscode.commands.registerCommand("goodloops-dev.mcpButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({
 				type: "action",
 				action: "mcpButtonClicked",
@@ -62,7 +149,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	const openClineInNewTab = async () => {
-		Logger.log("Opening Cline in new tab")
+		Logger.log("Opening Goodloops Dev in new tab")
 		// (this example uses webviewProvider activation event which is necessary to deserialize cached webview, but since we use retainContextWhenHidden, we don't need to use that event)
 		// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 		const tabProvider = new ClineProvider(context, outputChannel)
@@ -94,11 +181,11 @@ export function activate(context: vscode.ExtensionContext) {
 		await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cline.popoutButtonClicked", openClineInNewTab))
-	context.subscriptions.push(vscode.commands.registerCommand("cline.openInNewTab", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("goodloops-dev.popoutButtonClicked", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("goodloops-dev.openInNewTab", openClineInNewTab))
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.settingsButtonClicked", () => {
+		vscode.commands.registerCommand("goodloops-dev.settingsButtonClicked", () => {
 			//vscode.window.showInformationMessage(message)
 			sidebarProvider.postMessageToWebview({
 				type: "action",
@@ -108,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.historyButtonClicked", () => {
+		vscode.commands.registerCommand("goodloops-dev.historyButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({
 				type: "action",
 				action: "historyButtonClicked",
@@ -117,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.accountButtonClicked", () => {
+		vscode.commands.registerCommand("goodloops-dev.accountButtonClicked", () => {
 			sidebarProvider.postMessageToWebview({
 				type: "action",
 				action: "accountButtonClicked",
@@ -126,8 +213,8 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.openDocumentation", () => {
-			vscode.env.openExternal(vscode.Uri.parse("https://docs.cline.bot/"))
+		vscode.commands.registerCommand("goodloops-dev.openDocumentation", () => {
+			vscode.env.openExternal(vscode.Uri.parse("https://docs.goodloops.dev/"))
 		}),
 	)
 
@@ -210,37 +297,40 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.addToChat", async (range?: vscode.Range, diagnostics?: vscode.Diagnostic[]) => {
-			const editor = vscode.window.activeTextEditor
-			if (!editor) {
-				return
-			}
+		vscode.commands.registerCommand(
+			"goodloops-dev.addToChat",
+			async (range?: vscode.Range, diagnostics?: vscode.Diagnostic[]) => {
+				const editor = vscode.window.activeTextEditor
+				if (!editor) {
+					return
+				}
 
-			// Use provided range if available, otherwise use current selection
-			// (vscode command passes an argument in the first param by default, so we need to ensure it's a Range object)
-			const textRange = range instanceof vscode.Range ? range : editor.selection
-			const selectedText = editor.document.getText(textRange)
+				// Use provided range if available, otherwise use current selection
+				// (vscode command passes an argument in the first param by default, so we need to ensure it's a Range object)
+				const textRange = range instanceof vscode.Range ? range : editor.selection
+				const selectedText = editor.document.getText(textRange)
 
-			if (!selectedText) {
-				return
-			}
+				if (!selectedText) {
+					return
+				}
 
-			// Get the file path and language ID
-			const filePath = editor.document.uri.fsPath
-			const languageId = editor.document.languageId
+				// Get the file path and language ID
+				const filePath = editor.document.uri.fsPath
+				const languageId = editor.document.languageId
 
-			// Send to sidebar provider
-			await sidebarProvider.addSelectedCodeToChat(
-				selectedText,
-				filePath,
-				languageId,
-				Array.isArray(diagnostics) ? diagnostics : undefined,
-			)
-		}),
+				// Send to sidebar provider
+				await sidebarProvider.addSelectedCodeToChat(
+					selectedText,
+					filePath,
+					languageId,
+					Array.isArray(diagnostics) ? diagnostics : undefined,
+				)
+			},
+		),
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.addTerminalOutputToChat", async () => {
+		vscode.commands.registerCommand("goodloops-dev.addTerminalOutputToChat", async () => {
 			const terminal = vscode.window.activeTerminal
 			if (!terminal) {
 				return
@@ -311,14 +401,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 					const addAction = new vscode.CodeAction("Add to Cline", vscode.CodeActionKind.QuickFix)
 					addAction.command = {
-						command: "cline.addToChat",
+						command: "goodloops.addToChat",
 						title: "Add to Cline",
 						arguments: [expandedRange, context.diagnostics],
 					}
 
 					const fixAction = new vscode.CodeAction("Fix with Cline", vscode.CodeActionKind.QuickFix)
 					fixAction.command = {
-						command: "cline.fixWithCline",
+						command: "goodloops.fixWithCline",
 						title: "Fix with Cline",
 						arguments: [expandedRange, context.diagnostics],
 					}
@@ -339,7 +429,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Register the command handler
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.fixWithCline", async (range: vscode.Range, diagnostics: any[]) => {
+		vscode.commands.registerCommand("goodloops-dev.fixWithCline", async (range: vscode.Range, diagnostics: any[]) => {
 			const editor = vscode.window.activeTextEditor
 			if (!editor) {
 				return
@@ -360,7 +450,7 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
 	telemetryService.shutdown()
-	Logger.log("Cline extension deactivated")
+	Logger.log("Goodloops Dev extension deactivated")
 }
 
 // TODO: Find a solution for automatically removing DEV related content from production builds.
