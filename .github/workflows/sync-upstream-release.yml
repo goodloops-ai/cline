@@ -1,0 +1,207 @@
+name: Sync Upstream Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            force:
+                description: "Force sync even if version exists locally"
+                required: false
+                type: boolean
+                default: false
+    schedule:
+        # Run every day at midnight UTC
+        - cron: "0 0 * * *"
+
+permissions:
+    contents: write
+    packages: write
+    checks: write
+    pull-requests: write
+
+jobs:
+    check-upstream-releases:
+        name: Check for New Upstream Releases
+        runs-on: ubuntu-latest
+        outputs:
+            new_version: ${{ steps.compare_versions.outputs.new_version }}
+            upstream_version: ${{ steps.get_upstream_version.outputs.version }}
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Get Upstream Version
+              id: get_upstream_version
+              run: |
+                  # Get version from upstream main branch package.json
+                  VERSION=$(curl -s https://raw.githubusercontent.com/cline/cline/main/package.json | jq -r '.version')
+                  if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+                    echo "Failed to get version from upstream package.json"
+                    exit 1
+                  fi
+                  echo "Found upstream version: $VERSION"
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Check Local Version Status
+              id: compare_versions
+              run: |
+                  UPSTREAM_VERSION="${{ steps.get_upstream_version.outputs.version }}"
+                  FORCE="${{ github.event.inputs.force }}"
+
+                  # Check if we already have this version in a branch or tag
+                  if git show-ref --verify --quiet "refs/tags/v${UPSTREAM_VERSION}" || \
+                     git show-ref --verify --quiet "refs/heads/sync-upstream-v${UPSTREAM_VERSION}" || \
+                     git show-ref --verify --quiet "refs/remotes/origin/sync-upstream-v${UPSTREAM_VERSION}"; then
+                    
+                    if [ "$FORCE" = "true" ]; then
+                      echo "Version ${UPSTREAM_VERSION} exists locally, but force flag is set"
+                      echo "new_version=true" >> $GITHUB_OUTPUT
+                    else
+                      echo "Version ${UPSTREAM_VERSION} already exists locally and force flag is not set"
+                      echo "new_version=false" >> $GITHUB_OUTPUT
+                    fi
+                  else
+                    echo "Version ${UPSTREAM_VERSION} does not exist locally"
+                    echo "new_version=true" >> $GITHUB_OUTPUT
+                  fi
+
+    sync-upstream-release:
+        name: Sync Upstream Release
+        needs: check-upstream-releases
+        if: needs.check-upstream-releases.outputs.new_version == 'true'
+        runs-on: ubuntu-latest
+        outputs:
+            branch: ${{ steps.commit.outputs.branch }}
+            version: ${{ needs.check-upstream-releases.outputs.upstream_version }}
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.15.1
+
+            - name: Configure Git
+              run: |
+                  git config user.name "GitHub Actions"
+                  git config user.email "actions@github.com"
+
+            - name: Add Upstream Remote
+              run: |
+                  git remote add upstream https://github.com/cline/cline.git
+                  git fetch upstream --tags
+
+            - name: Create New Branch
+              id: create_new_branch
+              run: |
+                  VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
+
+                  # Split version into parts
+                  IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+                  BASE_BRANCH="sync-upstream-v${MAJOR}.${MINOR}.${PATCH}"
+
+                  # Find the next available counter (0-9)
+                  for COUNTER in {10..99}; do
+                    BRANCH="${BASE_BRANCH}${COUNTER}"
+                    if ! git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+                      break
+                    fi
+                    if [ "$COUNTER" = "9" ]; then
+                      echo "Error: All counters (0-9) are already used for this version"
+                      exit 1
+                    fi
+                  done
+
+                  echo "Using branch name: $BRANCH"
+                  echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+                  echo "counter=$COUNTER" >> $GITHUB_OUTPUT
+
+                  # Fetch upstream main branch
+                  echo "Fetching upstream main..."
+                  git fetch upstream main
+
+                  # Create new branch from upstream/main
+                  echo "Creating new branch $BRANCH from upstream/main..."
+                  git switch -c "$BRANCH" upstream/main
+
+                  # Verify we're on the right branch and have upstream content
+                  echo "Current branch: $(git branch --show-current)"
+                  echo "Current commit: $(git rev-parse HEAD)"
+                  echo "Upstream main commit: $(git rev-parse upstream/main)"
+
+                  # Now bring in just the codemods directory from our main
+                  echo "Copying codemods from our main..."
+                  git checkout main -- codemods/
+
+            - name: Apply Codemods
+              run: |
+                  # Ensure fs-extra is installed for the codemod script
+                  npm install fs-extra ts-morph
+
+                  # Apply codemods to clean upstream code
+                  echo "Applying codemods..."
+                  node codemods/apply.js
+
+                  # Remove the codemods directory since we don't want to commit it
+                  echo "Removing codemods directory..."
+                  rm -rf codemods/
+
+            - name: Install Dependencies
+              run: |
+                  npm install
+                  npm ci
+                  npm run format:fix
+
+            - name: Commit Changes
+              id: commit
+              run: |
+                  VERSION="${{ needs.check-upstream-releases.outputs.upstream_version }}"
+                  BRANCH="${{ steps.create_new_branch.outputs.branch }}"
+
+                  # Verify we're still on the right branch
+                  CURRENT_BRANCH=$(git branch --show-current)
+                  if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
+                    echo "Error: Not on expected branch $BRANCH (on $CURRENT_BRANCH instead)"
+                    exit 1
+                  fi
+
+                  # Add all changes from codemods
+                  echo "Adding modified files..."
+                  git add -A
+                  git status
+
+                  # Commit the codemod changes
+                  echo "Committing changes..."
+                  git commit -m "Apply codemods to upstream v${VERSION}"
+
+                  # Push to our fork
+                  echo "Pushing to origin $BRANCH..."
+                  git push -u origin "$BRANCH"
+
+                  # Pass through the branch name and counter
+                  echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+                  echo "counter=${{ steps.create_new_branch.outputs.counter }}" >> $GITHUB_OUTPUT
+
+    # Trigger the publish workflow with the sync branch
+    publish:
+        name: Trigger Publish Workflow
+        needs: [sync-upstream-release]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Trigger publish workflow
+              uses: peter-evans/repository-dispatch@v3
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  event-type: auto-publish
+                  client-payload: |
+                      {
+                        "release-type": "release",
+                        "branch": "${{ needs.sync-upstream-release.outputs.branch }}",
+                        "counter": "${{ needs.sync-upstream-release.outputs.counter }}"
+                      }
