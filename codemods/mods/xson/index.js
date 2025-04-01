@@ -48,7 +48,7 @@ async function applyTransforms(rootDir) {
 		await fs.writeFile(clineFile, transformed)
 		console.log("Transformed: src/core/Cline.ts")
 	}
-	
+
 	if (await fs.pathExists(esbuildFile)) {
 		const content = await fs.readFile(esbuildFile, "utf8")
 		const transformed = transformEsbuild(content)
