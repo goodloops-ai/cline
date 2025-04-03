@@ -1,5 +1,5 @@
 /**
- * Transform function for src/core/Cline.ts
+ * Transform function for src/core/task/index.ts
  * Adds XSON support for MCP arguments parsing
  */
 module.exports = function transform(content) {
