@@ -37,7 +37,7 @@ async function copyFiles(rootDir) {
 
 async function applyTransforms(rootDir) {
 	// Apply transforms to existing files
-	const clineFile = path.join(rootDir, "src/core/Cline.ts")
+	const clineFile = path.join(rootDir, "src/core/task/index.ts")
 	const systemFile = path.join(rootDir, "src/core/prompts/system.ts")
 	const esbuildFile = path.join(rootDir, "esbuild.js")
 	const packageJsonFile = path.join(rootDir, "package.json")
@@ -46,7 +46,7 @@ async function applyTransforms(rootDir) {
 		const content = await fs.readFile(clineFile, "utf8")
 		const transformed = transformCline(content)
 		await fs.writeFile(clineFile, transformed)
-		console.log("Transformed: src/core/Cline.ts")
+		console.log("Transformed: src/core/task/index.ts")
 	}
 
 	if (await fs.pathExists(esbuildFile)) {
