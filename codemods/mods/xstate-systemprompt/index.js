@@ -16,25 +16,25 @@ async function apply(rootDir) {
 
 async function applyTransforms(rootDir) {
 	// Apply transform to system.ts file
-	// Apply transform to Cline.ts file
-	const clineTsFile = path.join(rootDir, "src/core/Cline.ts")
+	// Apply transform to task/index.ts file
+	const clineTsFile = path.join(rootDir, "src/core/task/index.ts")
 
 	if (await fs.pathExists(clineTsFile)) {
 		const content = await fs.readFile(clineTsFile, "utf8")
 		const transformed = transformSystemTs(content)
 		await fs.writeFile(clineTsFile, transformed)
-		console.log("Transformed: src/core/Cline.ts")
+		console.log("Transformed: src/core/task/index.ts")
 	} else {
-		console.error("Could not find src/core/Cline.ts")
+		console.error("Could not find src/core/task/index.ts")
 	}
 
 	if (await fs.pathExists(clineTsFile)) {
 		const content = await fs.readFile(clineTsFile, "utf8")
 		const transformed = transformClineTs(content)
 		await fs.writeFile(clineTsFile, transformed)
-		console.log("Transformed: src/core/Cline.ts")
+		console.log("Transformed: src/core/task/index.ts")
 	} else {
-		console.error("Could not find src/core/Cline.ts")
+		console.error("Could not find src/core/task/index.ts")
 	}
 }
 

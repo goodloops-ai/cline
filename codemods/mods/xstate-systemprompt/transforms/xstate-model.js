@@ -10,7 +10,7 @@ module.exports = function transform(content) {
 	}
 
 	// Define the pattern to match - find the async attemptApiRequest method
-	const attemptApiRequestRegex = /const mcpHub = this.providerRef.deref\(\)\?\.mcpHub\n.*\n.*\n.*\n/
+	const attemptApiRequestRegex = /const mcpHub = this.controllerRef.deref\(\)\?\.mcpHub\n.*\n.*\n.*\n/
 	// Replace with the original code plus the model fetching code
 	const modifiedContent = content.replace(attemptApiRequestRegex, (match) => {
 		return `${match}
