@@ -43,7 +43,7 @@ module.exports = function transform(content) {
 									vertexModelId: modelId,
 								}
 
-								await updateApiConfiguration(updatedApiConfiguration)
+								await updateApiConfiguration(provider.context, updatedApiConfiguration)
 								await provider.postStateToWebview()
 
                                 console.log("Using model from xstate MCP server:", modelId)

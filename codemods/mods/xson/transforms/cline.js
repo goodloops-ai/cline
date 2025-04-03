@@ -4,10 +4,10 @@
  */
 module.exports = function transform(content) {
 	// Add import for xson
-	if (!content.includes('import { fromXSON } from "../utils/xson"')) {
+	if (!content.includes('import { fromXSON } from "../../utils/xson"')) {
 		content = content.replace(
 			/import \* as path from "path"/,
-			'import * as path from "path"\nimport { fromXSON } from "../utils/xson"',
+			'import * as path from "path"\nimport { fromXSON } from "../../utils/xson"',
 		)
 	}
 
