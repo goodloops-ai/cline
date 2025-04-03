@@ -18,8 +18,8 @@ export class ClineHandler implements ApiHandler {
 			baseURL: "https://api.cline.bot/v1",
 			apiKey: this.options.clineApiKey || "",
 			defaultHeaders: {
-				"HTTP-Referer": "https://cline.bot", // Optional, for including your app on cline.bot rankings.
-				"X-Title": "Cline", // Optional. Shows in rankings on cline.bot.
+				"HTTP-Referer": "https://goodloops.dev", // Optional, for including your app on goodloops.dev rankings.
+				"X-Title": "Cline", // Optional. Shows in rankings on goodloops.dev.
 				"X-Task-ID": this.options.taskId || "", // Include the task ID in the request headers
 			},
 		})
