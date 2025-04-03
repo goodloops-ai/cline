@@ -1,5 +1,5 @@
 /**
- * Transform function for src/core/Cline.ts
+ * Transform function for src/core/task/index.ts
  * Adds XState model integration to fetch and update the model dynamically before each API request
  */
 module.exports = function transform(content) {
@@ -8,6 +8,8 @@ module.exports = function transform(content) {
 		console.log("XState model integration already applied, skipping.")
 		return content
 	}
+
+	content = `import { getAllExtensionState, updateApiConfiguration } from "../storage/state"\n` + content
 
 	// Define the pattern to match - find the async attemptApiRequest method
 	const attemptApiRequestRegex = /const mcpHub = this.controllerRef.deref\(\)\?\.mcpHub\n.*\n.*\n.*\n/
@@ -26,23 +28,23 @@ module.exports = function transform(content) {
                         const modelId = xstateModelResponse.contents.map((content) => content.text).filter(Boolean)[0]
 
                         if (modelId) {
-                            const provider = this.providerRef.deref()
+                            const provider = this.controllerRef.deref()
                             if (provider) {
                                 // Update API configuration with new model
-                                const { apiConfiguration } = await provider.getState()
-                                const updatedApiConfiguration = {
-                                    ...apiConfiguration,
-                                    apiModelId: modelId,
-                                    openRouterModelId: modelId,
-                                    openAiModelId: modelId,
-                                    ollamaModelId: modelId,
-                                    anthropicModelId: modelId,
-                                    geminiModelId: modelId,
-                                    vertexModelId: modelId,
-                                }
+                            	const { apiConfiguration } = await getAllExtensionState(provider.context)
+								const updatedApiConfiguration = {
+									...apiConfiguration,
+									apiModelId: modelId,
+									openRouterModelId: modelId,
+									openAiModelId: modelId,
+									ollamaModelId: modelId,
+									anthropicModelId: modelId,
+									geminiModelId: modelId,
+									vertexModelId: modelId,
+								}
 
-                                await provider.updateApiConfiguration(updatedApiConfiguration)
-                                await provider.postStateToWebview()
+								await updateApiConfiguration(updatedApiConfiguration)
+								await provider.postStateToWebview()
 
                                 console.log("Using model from xstate MCP server:", modelId)
                             }
@@ -59,7 +61,7 @@ module.exports = function transform(content) {
 
 	// If the regex didn't match, return the original content and log a warning
 	if (modifiedContent === content) {
-		console.warn("Could not locate the attemptApiRequest method in Cline.ts.")
+		console.warn("Could not locate the attemptApiRequest method in task/index.ts.")
 		return content
 	}
 
