@@ -1,3 +1,4 @@
+import { getAllExtensionState, updateApiConfiguration } from "../storage/state"
 import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import fs from "fs/promises"
@@ -7,6 +8,7 @@ import os from "os"
 import pTimeout from "p-timeout"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
+import { fromXSON } from "../../utils/xson"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { ApiHandler, buildApiHandler } from "../../api"
@@ -1184,6 +1186,46 @@ export class Task {
 			throw new Error("MCP hub not available")
 		}
 
+		if (mcpHub) {
+			const xstateServer = mcpHub.connections.find(
+				(conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled,
+			)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					// Fetch model from xstate MCP server
+					const xstateModelResponse = await mcpHub.readResource("goodloops-actor", "xstate://model-card")
+					if (xstateModelResponse && xstateModelResponse.contents && xstateModelResponse.contents.length > 0) {
+						const modelId = xstateModelResponse.contents.map((content) => content.text).filter(Boolean)[0]
+
+						if (modelId) {
+							const provider = this.controllerRef.deref()
+							if (provider) {
+								// Update API configuration with new model
+								const { apiConfiguration } = await getAllExtensionState(provider.context)
+								const updatedApiConfiguration = {
+									...apiConfiguration,
+									apiModelId: modelId,
+									openRouterModelId: modelId,
+									openAiModelId: modelId,
+									ollamaModelId: modelId,
+									anthropicModelId: modelId,
+									geminiModelId: modelId,
+									vertexModelId: modelId,
+								}
+
+								await updateApiConfiguration(provider.context, updatedApiConfiguration)
+								await provider.postStateToWebview()
+
+								console.log("Using model from xstate MCP server:", modelId)
+							}
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate model:", error)
+				}
+			}
+		}
+
 		const disableBrowserTool = vscode.workspace.getConfiguration("cline").get<boolean>("disableBrowserTool") ?? false
 		const modelSupportsComputerUse = this.api.getModel().info.supportsComputerUse ?? false
 
@@ -1252,6 +1294,32 @@ export class Task {
 				preferredLanguageInstructions,
 			)
 		}
+
+		if (mcpHub) {
+			const xstateServer = mcpHub.connections.find(
+				(conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled,
+			)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					// Set current task ID before fetching system prompt
+					await mcpHub.callTool("goodloops-actor", "set_task_id", { taskId: this.taskId })
+
+					const xstateSystemPrompt = await mcpHub.readResource("goodloops-actor", "xstate://systemprompt")
+					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
+						const xstatePromptText = xstateSystemPrompt.contents
+							.map((content) => content.text)
+							.filter(Boolean)
+							.join("\n\n")
+						if (xstatePromptText) {
+							systemPrompt += "\n\n" + xstatePromptText
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate system prompt:", error)
+				}
+			}
+		}
+
 		const contextManagementMetadata = this.contextManager.getNewContextMessagesAndMetadata(
 			this.apiConversationHistory,
 			this.clineMessages,
@@ -2485,8 +2553,10 @@ export class Task {
 								// }
 								let parsedArguments: Record<string, unknown> | undefined
 								if (mcp_arguments) {
+									const useXsonParser =
+										vscode.workspace.getConfiguration("goodloops").get<boolean>("useXsonParser") ?? false
 									try {
-										parsedArguments = JSON.parse(mcp_arguments)
+										parsedArguments = useXsonParser ? fromXSON(mcp_arguments) : JSON.parse(mcp_arguments)
 									} catch (error) {
 										this.consecutiveMistakeCount++
 										await this.say(
