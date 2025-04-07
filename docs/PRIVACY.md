@@ -1,1 +1,1 @@
-See [https://cline.bot/privacy](https://cline.bot/privacy) for our privacy policy.
+See [https://goodloops.dev/privacy](https://goodloops.dev/privacy) for our privacy policy.
