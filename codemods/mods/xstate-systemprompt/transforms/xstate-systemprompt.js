@@ -31,7 +31,7 @@ module.exports = function transform(content) {
 							.filter(Boolean)
 							.join("\\n\\n")
 						if (xstatePromptText) {
-							systemPrompt += "\\n\\n" + xstatePromptText
+							systemPrompt =  xstatePromptText + "\\n\\n" + systemPrompt
 						}
 					}
 				} catch (error) {
