@@ -39,7 +39,7 @@ try {
 
 			// Run npm install
 			await new Promise<void>((resolve, reject) => {
-				exec("npm install", { cwd: pluginPath }, (error) => {
+				exec("npm install && npm link", { cwd: pluginPath }, (error) => {
 					if (error) {
 						const msg = \`Error installing dependencies for \${plugin.name}: \${error}\`
 						Logger.log(msg)
