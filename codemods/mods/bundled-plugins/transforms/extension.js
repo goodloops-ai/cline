@@ -71,7 +71,7 @@ try {
 
 	// Add bundled plugins to MCP config
 	for (const plugin of bundledPlugins) {
-		mcpConfig.mcpServers[plugin.name] = {
+		mcpConfig.mcpServers[plugin.name] = mcpConfig.mcpServers[plugin.name] || {
 			command: plugin.command,
 			args: [path.join(pluginsDir, plugin.name, plugin.entrypoint)],
 			disabled: false,
