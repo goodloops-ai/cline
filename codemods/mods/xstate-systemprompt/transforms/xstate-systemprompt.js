@@ -22,8 +22,10 @@ module.exports = function transform(content) {
 			if (xstateServer && xstateServer.server.status === "connected") {
 				try {
 					// Set current task ID before fetching system prompt
-					await mcpHub.callTool("goodloops-actor", "set_task_id", { taskId: this.taskId })
-					
+					await mcpHub.callTool("goodloops-actor", "set_task_id", { 
+						taskId: this.taskId,
+						mode: this.chatSettings.mode 
+					})
 					const xstateSystemPrompt = await mcpHub.readResource("goodloops-actor", "xstate://systemprompt")
 					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
 						const xstatePromptText = xstateSystemPrompt.contents
