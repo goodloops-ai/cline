@@ -1,4 +1,5 @@
 const esbuild = require("esbuild")
+const jsdomPatch = require("./esbuild-jsdom-patch")
 const fs = require("fs")
 const path = require("path")
 
@@ -74,6 +75,7 @@ const extensionConfig = {
 		"process.env.IS_TEST": JSON.stringify(test),
 	},
 	plugins: [
+		jsdomPatch,
 		copyWasmFiles,
 		/* add to the end of plugins array */
 		esbuildProblemMatcherPlugin,
