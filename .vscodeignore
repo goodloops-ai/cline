@@ -42,3 +42,4 @@ docs/**
 
 # Include icons
 !assets/icons/**
+!node_modules/simple-git/**
