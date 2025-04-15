@@ -18,12 +18,12 @@ module.exports = function transform(content) {
 		return `${match}
 
 		
-        if (mcpHub) {
-            const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled)
+        if (this.mcpHub) {
+            const xstateServer = this.mcpHub.connections.find((conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled)
             if (xstateServer && xstateServer.server.status === "connected") {
                 try {
                     // Fetch model from xstate MCP server
-                    const xstateModelResponse = await mcpHub.readResource("goodloops-actor", "xstate://model-card")
+                    const xstateModelResponse = await this.mcpHub.readResource("goodloops-actor", "xstate://model-card")
                     if (xstateModelResponse && xstateModelResponse.contents && xstateModelResponse.contents.length > 0) {
                         const modelId = xstateModelResponse.contents.map((content) => content.text).filter(Boolean)[0]
 
