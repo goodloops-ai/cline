@@ -16,17 +16,17 @@ module.exports = function transform(content) {
 	const modifiedContent = content.replace(addUserInstructionsRegex, (match) => {
 		return `${match}
 
-		if (mcpHub) {
+		if (this.mcpHub) {
 
-			const xstateServer = mcpHub.connections.find((conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled)
+			const xstateServer = this.mcpHub.connections.find((conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled)
 			if (xstateServer && xstateServer.server.status === "connected") {
 				try {
 					// Set current task ID before fetching system prompt
-					await mcpHub.callTool("goodloops-actor", "set_task_id", { 
+					await this.mcpHub.callTool("goodloops-actor", "set_task_id", { 
 						taskId: this.taskId,
 						mode: this.chatSettings.mode 
 					})
-					const xstateSystemPrompt = await mcpHub.readResource("goodloops-actor", "xstate://systemprompt")
+					const xstateSystemPrompt = await this.mcpHub.readResource("goodloops-actor", "xstate://systemprompt")
 					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
 						const xstatePromptText = xstateSystemPrompt.contents
 							.map((content) => content.text)
