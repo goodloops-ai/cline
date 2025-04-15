@@ -1,3 +1,11 @@
 {
-	"enabledMods": ["fork", "xson", "inject-workspace-dir", "xstate-systemprompt", "bundled-plugins", "replace-system-prompt"]
+	"enabledMods": [
+		"fork",
+		"xson",
+		"inject-workspace-dir",
+		"xstate-systemprompt",
+		"bundled-plugins",
+		"replace-system-prompt",
+		"system-message-position"
+	]
 }
