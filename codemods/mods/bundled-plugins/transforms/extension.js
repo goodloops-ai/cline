@@ -30,10 +30,12 @@ try {
 			if (!pluginExists) {
 				// Clone the plugin repository
 				await git.clone(plugin.githubUrl, pluginPath)
+				await git.cwd(pluginPath).checkout(plugin.checkout)
 				Logger.log(\`Cloned plugin: \${plugin.name}\`)
 			} else {
 				// Update existing plugin repository
 				await git.cwd(pluginPath).pull("origin", "main")
+				await git.cwd(pluginPath).checkout(plugin.checkout)
 				Logger.log(\`Updated plugin: \${plugin.name}\`)
 			}
 
