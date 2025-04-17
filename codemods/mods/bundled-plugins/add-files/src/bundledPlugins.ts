@@ -4,13 +4,13 @@ export const bundledPlugins = [
 		githubUrl: "https://github.com/goodloops-ai/xstate-mcp.git",
 		entrypoint: "src/index.js",
 		command: "node",
-		checkout: "bbf4d863db5b3b3faa3d678df36c0097a79e8f7c",
+		checkout: "6d90f2757d4fa5502977dbbd88243e1c1f182a2f",
 	},
 	{
 		name: "shell-mcp",
 		githubUrl: "https://github.com/goodloops-ai/shell-mcp.git",
 		entrypoint: "server.js",
 		command: "node",
-		checkout: "edfa24dc5c36c9504fb77ef83eb10576e8876ffc",
+		checkout: "eea93545b5ffccb4f41902b138c597f52c0dc653",
 	},
 ]
