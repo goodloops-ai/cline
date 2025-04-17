@@ -34,6 +34,7 @@ try {
 				Logger.log(\`Cloned plugin: \${plugin.name}\`)
 			} else {
 				// Update existing plugin repository
+				await git.cwd(pluginPath).stash()
 				await git.cwd(pluginPath).pull("origin", "main")
 				await git.cwd(pluginPath).checkout(plugin.checkout)
 				Logger.log(\`Updated plugin: \${plugin.name}\`)
