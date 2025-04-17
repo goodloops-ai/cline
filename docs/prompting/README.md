@@ -120,7 +120,7 @@ your-project/
 └── ...
 ```
 
-Cline's system prompt, on the other hand, is not user-editable ([here's where you can find it](https://github.com/cline/cline/blob/main/src/core/prompts/system.ts)). For a broader look at prompt engineering best practices, check out [this resource](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview).
+Cline's system prompt, on the other hand, is not user-editable ([here's where you can find it](https://github.com/goodloops/goodloops-dev/blob/main/src/core/prompts/system.ts)). For a broader look at prompt engineering best practices, check out [this resource](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview).
 
 ### Tips for Writing Effective Custom Instructions
 
