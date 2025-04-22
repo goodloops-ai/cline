@@ -15,8 +15,8 @@ export async function createOpenRouterStream(
 ) {
 	// Convert Anthropic messages to OpenAI format
 	let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-		{ role: "system", content: systemPrompt },
 		...convertToOpenAiMessages(messages),
+		{ role: "system", content: systemPrompt },
 	]
 
 	// prompt caching: https://openrouter.ai/docs/prompt-caching
