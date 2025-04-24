@@ -17,8 +17,8 @@ Before you begin, make sure you have the following:
     -   On Windows: Create a folder named "Cline" in your Documents folder
         -   Path: `C:\Users\[your-username]\Documents\Cline`
     -   Inside this Cline folder, create separate folders for each project
-        -   Example: `Documents/Cline/workout-app` for a workout tracking app
-        -   Example: `Documents/Cline/portfolio-website` for your portfolio
+        -   Example: `Documents/Goodloops/workout-app` for a workout tracking app
+        -   Example: `Documents/Goodloops/portfolio-website` for your portfolio
 -   **Cline Extension in VS Code:** The Cline extension installed in VS Code.
 
 -   Here's a [tutorial](https://www.youtube.com/watch?v=N4td-fKhsOQ) on everything you need to get started.
@@ -89,4 +89,4 @@ Feel free to contact me, and I'll help you get started with Cline.
 
 nick | 608-558-2410
 
-Join our Discord community: [https://discord.gg/cline](https://discord.gg/cline)
+Join our Discord community: [https://discord.gg/goodloops](https://discord.gg/goodloops)
