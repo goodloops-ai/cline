@@ -6,6 +6,7 @@
 		"xstate-systemprompt",
 		"bundled-plugins",
 		"replace-system-prompt",
-		"system-message-position"
+		"system-message-position",
+		"vs-code-browser"
 	]
 }
