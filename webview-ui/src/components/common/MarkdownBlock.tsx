@@ -8,6 +8,7 @@ import type { Node } from "unist"
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { CODE_BLOCK_BG_COLOR } from "@/components/common/CodeBlock"
 import MermaidBlock from "@/components/common/MermaidBlock"
+import { vscode } from "@/utils/vscode"
 
 interface MarkdownBlockProps {
 	markdown?: string
@@ -223,6 +224,22 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 		],
 		rehypeReactOptions: {
 			components: {
+				a: (props: ComponentProps<"a">) => {
+					return (
+						<a
+							{...props}
+							onClick={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								vscode.postMessage({
+									type: "openInVsCodeBrowser",
+									url: props.href,
+								})
+								return false
+							}}
+						/>
+					)
+				},
 				pre: ({ node, children, ...preProps }: any) => {
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
 						const child = children[0] as React.ReactElement<{ className?: string }>
