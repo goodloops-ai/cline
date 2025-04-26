@@ -15,8 +15,8 @@ export async function createOpenRouterStream(
 ) {
 	// Convert Anthropic messages to OpenAI format
 	let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-		{ role: "system", content: systemPrompt },
 		...convertToOpenAiMessages(messages),
+		{ role: "system", content: systemPrompt },
 	]
 
 	// prompt caching: https://openrouter.ai/docs/prompt-caching
@@ -44,7 +44,7 @@ export async function createOpenRouterStream(
 		case "google/gemini-2.0-flash-001":
 		case "google/gemini-flash-1.5":
 		case "google/gemini-pro-1.5":
-			openAiMessages[0] = {
+			openAiMessages[openAiMessages.length - 1] = {
 				role: "system",
 				content: [
 					{
@@ -111,7 +111,7 @@ export async function createOpenRouterStream(
 		// Recommended values from DeepSeek
 		temperature = 0.7
 		topP = 0.95
-		openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+		openAiMessages = convertToR1Format([...messages, { role: "user", content: systemPrompt }])
 	}
 
 	let reasoning: { max_tokens: number } | undefined = undefined
