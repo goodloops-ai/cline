@@ -25,6 +25,7 @@ export interface WebviewMessage {
 		| "requestOllamaModels"
 		| "requestLmStudioModels"
 		| "openInBrowser"
+		| "openInVsCodeBrowser"
 		| "createRuleFile"
 		| "openMention"
 		| "showChatView"
