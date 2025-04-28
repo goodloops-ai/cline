@@ -1,4 +1,5 @@
 const esbuild = require("esbuild")
+const jsdomPatch = require("./esbuild-jsdom-patch")
 const fs = require("fs")
 const path = require("path")
 
@@ -125,6 +126,7 @@ const extensionConfig = {
 		"process.env.IS_DEV": JSON.stringify(!production),
 	},
 	plugins: [
+		jsdomPatch,
 		copyWasmFiles,
 		aliasResolverPlugin,
 		/* add to the end of plugins array */

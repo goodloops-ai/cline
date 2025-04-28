@@ -1,3 +1,4 @@
+import { getAllExtensionState, updateApiConfiguration } from "../storage/state"
 import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import { execa } from "execa"
@@ -7,6 +8,7 @@ import os from "os"
 import pTimeout from "p-timeout"
 import pWaitFor from "p-wait-for"
 import * as path from "path"
+import { fromXSON } from "../../utils/xson"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { Logger } from "@services/logging/Logger"
@@ -1468,6 +1470,34 @@ export class Task {
 				preferredLanguageInstructions,
 			)
 		}
+
+		if (this.mcpHub) {
+			const xstateServer = this.mcpHub.connections.find(
+				(conn) => conn.server.name === "goodloops-actor" && !conn.server.disabled,
+			)
+			if (xstateServer && xstateServer.server.status === "connected") {
+				try {
+					// Set current task ID before fetching system prompt
+					await this.mcpHub.callTool("goodloops-actor", "set_task_id", {
+						taskId: this.taskId,
+						mode: this.chatSettings.mode,
+					})
+					const xstateSystemPrompt = await this.mcpHub.readResource("goodloops-actor", "xstate://systemprompt")
+					if (xstateSystemPrompt && xstateSystemPrompt.contents && xstateSystemPrompt.contents.length > 0) {
+						const xstatePromptText = xstateSystemPrompt.contents
+							.map((content) => content.text)
+							.filter(Boolean)
+							.join("\n\n")
+						if (xstatePromptText) {
+							systemPrompt = xstatePromptText + "\n\n" + systemPrompt
+						}
+					}
+				} catch (error) {
+					console.error("Failed to access xstate system prompt:", error)
+				}
+			}
+		}
+
 		const contextManagementMetadata = await this.contextManager.getNewContextMessagesAndMetadata(
 			this.apiConversationHistory,
 			this.clineMessages,
@@ -2743,8 +2773,10 @@ export class Task {
 								// }
 								let parsedArguments: Record<string, unknown> | undefined
 								if (mcp_arguments) {
+									const useXsonParser =
+										vscode.workspace.getConfiguration("goodloops").get<boolean>("useXsonParser") ?? false
 									try {
-										parsedArguments = JSON.parse(mcp_arguments)
+										parsedArguments = useXsonParser ? fromXSON(mcp_arguments) : JSON.parse(mcp_arguments)
 									} catch (error) {
 										this.consecutiveMistakeCount++
 										await this.say(
